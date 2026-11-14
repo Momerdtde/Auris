@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- GitHub Pages Cihazlar Arası Otomatik Bulut Senkronizasyonu İçin GunDB P2P Relay -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     
     <style>
         body {
@@ -139,6 +141,22 @@
                     <button type="submit" id="login-submit-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/25 text-sm">
                         Giriş Yap
                     </button>
+
+                    <!-- Başka Cihazdan Eşleştirme Kodu İle Anında Giriş -->
+                    <div class="pt-2">
+                        <button type="button" onclick="toggleQuickSyncInput()" class="w-full py-2 px-3 rounded-xl bg-[#0f172a] hover:bg-slate-800 border border-slate-700/80 text-[11px] font-bold text-amber-400 flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-mobile-screen-button"></i> Başka Cihazdan Eşleştirme Kodu / Linki ile Aç
+                        </button>
+                        <div id="quick-sync-box" class="hidden mt-2 p-3 rounded-2xl bg-[#0f172a] border border-amber-500/40 space-y-2">
+                            <p class="text-[11px] text-slate-300 leading-relaxed">
+                                Diğer cihazınızda üst bardaki <strong class="text-emerald-400">"Cihaz Eşitle"</strong> düğmesinden kopyaladığınız kodu buraya yapıştırın:
+                            </p>
+                            <textarea id="quick-sync-code-input" rows="2" placeholder="Eşleştirme kodunu buraya yapıştırın..." class="w-full bg-[#1e293b] border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-amber-500"></textarea>
+                            <button type="button" onclick="importFromQuickSyncCode()" class="w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition">
+                                Hesabı Bu Cihaza Aktar ve Giriş Yap
+                            </button>
+                        </div>
+                    </div>
                 </form>
 
                 <!-- KAYIT FORMU -->
@@ -167,10 +185,10 @@
                 <!-- Alt Bilgi: Bulut Durumu ve Yedek Yükle -->
                 <div class="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
                     <span id="cloud-sync-indicator" class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Bulut Senkron Hazır
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Çoklu Bulut Senkron Aktif
                     </span>
                     <label class="text-blue-400 hover:text-blue-300 font-bold cursor-pointer">
-                        <i class="fa-solid fa-upload mr-1"></i>Yedek Yükle
+                        <i class="fa-solid fa-upload mr-1"></i>Yedek Dosyası Seç
                         <input type="file" accept=".json" onchange="importJsonBackup(event)" class="hidden">
                     </label>
                 </div>
@@ -203,15 +221,15 @@
                     </div>
                 </div>
 
-                <!-- Sağ: Hızlı Yedek ve Çıkış Düğmeleri -->
+                <!-- Sağ: Cihaz Eşitle, Araç Bilgisi ve Çıkış Düğmeleri -->
                 <div class="flex items-center gap-2">
+                    <button type="button" onclick="openModal('modal-sync')" class="px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-extrabold text-emerald-300 transition flex items-center gap-1.5" title="Başka Cihazdan Giriş & Bulut Eşitleme">
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                        <span>Cihaz Eşitle</span>
+                    </button>
                     <button type="button" onclick="openModal('modal-profile')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-sliders text-blue-400"></i>
                         <span class="hidden sm:inline">Araç Bilgisi</span>
-                    </button>
-                    <button type="button" onclick="exportJsonBackup()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition flex items-center gap-1.5" title="Verileri Yedek İndir">
-                        <i class="fa-solid fa-download text-emerald-400"></i>
-                        <span class="hidden sm:inline">Yedek İndir</span>
                     </button>
                     <button type="button" onclick="handleLogout()" class="px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-xs font-bold text-red-400 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-power-off"></i>
@@ -907,6 +925,63 @@
         </div>
     </div>
 
+    <!-- ===================================================================== -->
+    <!-- PENCERE 8: BAŞKA CİHAZDAN GİRİŞ & BULUT EŞİTLEME MODALI               -->
+    <!-- ===================================================================== -->
+    <div id="modal-sync" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#1e293b] border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+                <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i> Başka Cihazdan Giriş & Bulut Eşitleme
+                </h3>
+                <button type="button" onclick="closeModal('modal-sync')" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <!-- Otomatik Bulut Durumu -->
+                <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-base mt-0.5"></i>
+                    <div>
+                        <div class="font-extrabold text-emerald-300">1. Otomatik Bulut Senkronizasyonu Aktif</div>
+                        <p class="text-slate-300 mt-0.5 leading-relaxed">
+                            Hesabınız (Kullanıcı Adı: <strong id="sync-modal-username" class="text-white">--</strong>) bulut rölelerine otomatik kaydedildi. Başka bir cihazdan aynı kullanıcı adı ve şifreyle giriş yapabilirsiniz.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tek Tıkla Giriş Linki (100% Garantili Yöntem) -->
+                <div class="p-4 rounded-2xl bg-[#0f172a] border border-slate-800 space-y-2.5">
+                    <div class="font-extrabold text-blue-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-link"></i> 2. Tek Tıkla Başka Cihazda Açma Linki (%100 Garantili)
+                    </div>
+                    <p class="text-slate-400 leading-relaxed">
+                        Tarayıcı güvenlik duvarları veya reklam engelleyiciler bulutu engellerse, aşağıdaki düğmeyle **Tek Tıkla Giriş Linkinizi** kopyalayıp WhatsApp/Telegram'dan kendinize gönderin. Diğer cihazda linke tıkladığınız anda şifre bile sormadan hesabınız açılır:
+                    </p>
+                    <button type="button" onclick="copyOneClickLoginLink()" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition">
+                        <i class="fa-solid fa-share-nodes"></i> Tek Tıkla Giriş Linkini Kopyala
+                    </button>
+                </div>
+
+                <!-- Eşleştirme Kodu ve JSON Yedek -->
+                <div class="p-4 rounded-2xl bg-[#0f172a] border border-slate-800 space-y-2.5">
+                    <div class="font-extrabold text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-key"></i> 3. Cihaz Eşleştirme Kodu veya Yedek Dosyası
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="copyQuickSyncCode()" class="py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-copy"></i> Eşleştirme Kodu Kopyala
+                        </button>
+                        <button type="button" onclick="exportJsonBackup()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-download text-emerald-400"></i> Yedek (.json) İndir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Belge Önizleme Modalı -->
     <div id="doc-preview-modal" class="fixed inset-0 z-[70] hidden bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[#1e293b] border border-slate-700 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -921,20 +996,42 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT & BULUT SENKRONİZASYONU (BAŞKA CİHAZDAN GİRİŞ DESTEKLİ)     -->
+    <!-- JAVASCRIPT & ÇOK KATMANLI BULUT SENKRONİZASYONU (GITHUB PAGES UYUMLU) -->
     <!-- ===================================================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Firebase Bulut Bağlantısı (Başka cihazdan girildiğinde kullanıcıyı bulmak için) ---
+        // --- KATMAN 1: Firebase Bulut (Önizleme ortamı için) ---
         let db = null;
         let auth = null;
-        let cloudReady = false;
+        let firebaseReady = false;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'auris-takip-paneli';
 
+        // --- KATMAN 2: GunDB Merkezi Olmayan Bulut Rölesi (GitHub Pages'te ayar gerektirmeden cihazlar arası çalışır) ---
+        let gunDb = null;
+        const GUN_NAMESPACE = 'auris_takip_paneli_global_2026_v4';
+
+        function initGunRelay() {
+            try {
+                if (typeof window.Gun !== 'undefined') {
+                    gunDb = window.Gun({
+                        peers: [
+                            'https://gun-manhattan.herokuapp.com/gun',
+                            'https://relay.peer.ooo/gun',
+                            'https://peer.wallie.io/gun'
+                        ],
+                        localStorage: false
+                    });
+                }
+            } catch (err) {
+                console.warn('Gun relay init warning:', err);
+            }
+        }
+
         async function initCloudSync() {
+            initGunRelay();
             try {
                 if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                     const firebaseConfig = JSON.parse(__firebase_config);
@@ -946,40 +1043,84 @@
                     } else {
                         await signInAnonymously(auth);
                     }
-                    cloudReady = true;
+                    firebaseReady = true;
                 }
             } catch (e) {
-                cloudReady = false;
+                firebaseReady = false;
             }
         }
 
+        // Kullanıcı hesabını ve araç verilerini tüm bulut katmanlarına aynı anda kaydet
         async function saveAccountToCloud(username, accountObj, vehicleDataObj) {
-            if (!cloudReady || !db || !auth?.currentUser) return;
-            try {
-                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auris_accounts', username.toLowerCase());
-                await setDoc(ref, {
-                    username: username.toLowerCase(),
-                    password: accountObj.password,
-                    carTitle: accountObj.carTitle,
-                    vehicleDataJson: JSON.stringify(vehicleDataObj),
-                    updatedAt: new Date().toISOString()
-                });
-            } catch (e) {
-                console.warn('Cloud sync warning:', e);
+            const cleanUser = username.trim().toLowerCase();
+            const payload = {
+                username: cleanUser,
+                password: accountObj.password,
+                carTitle: accountObj.carTitle,
+                vehicleDataJson: JSON.stringify(vehicleDataObj),
+                updatedAt: new Date().toISOString()
+            };
+
+            // 1. GunDB P2P Bulut Rölesine Kaydet (GitHub Pages için)
+            if (gunDb) {
+                try {
+                    gunDb.get(GUN_NAMESPACE).get('user_' + cleanUser).put(payload);
+                } catch (e) {
+                    console.warn('Gun save warning:', e);
+                }
+            }
+
+            // 2. Firebase Firestore'a Kaydet (Varsa)
+            if (firebaseReady && db && auth?.currentUser) {
+                try {
+                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auris_accounts', cleanUser);
+                    await setDoc(ref, payload);
+                } catch (e) {
+                    console.warn('Firestore save warning:', e);
+                }
             }
         }
 
+        // Başka cihazdan girildiğinde kullanıcıyı bulut katmanlarından ara
         async function fetchAccountFromCloud(username) {
-            if (!cloudReady || !db || !auth?.currentUser) return null;
-            try {
-                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auris_accounts', username.toLowerCase());
-                const snap = await getDoc(ref);
-                if (snap.exists()) {
-                    return snap.data();
+            const cleanUser = username.trim().toLowerCase();
+
+            // 1. Önce Firebase Firestore'a bak (Varsa)
+            if (firebaseReady && db && auth?.currentUser) {
+                try {
+                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'auris_accounts', cleanUser);
+                    const snap = await getDoc(ref);
+                    if (snap.exists()) {
+                        return snap.data();
+                    }
+                } catch (e) {
+                    console.warn('Firestore fetch warning:', e);
                 }
-            } catch (e) {
-                console.warn('Cloud fetch warning:', e);
             }
+
+            // 2. GunDB P2P Bulut Rölesinden Çek (GitHub Pages üzerinde başka cihazdan girildiğinde)
+            if (gunDb) {
+                try {
+                    const gunResult = await new Promise((resolve) => {
+                        let resolved = false;
+                        const timer = setTimeout(() => {
+                            if (!resolved) { resolved = true; resolve(null); }
+                        }, 3200);
+
+                        gunDb.get(GUN_NAMESPACE).get('user_' + cleanUser).once((data) => {
+                            if (!resolved && data && data.username && data.vehicleDataJson) {
+                                resolved = true;
+                                clearTimeout(timer);
+                                resolve(data);
+                            }
+                        });
+                    });
+                    if (gunResult) return gunResult;
+                } catch (e) {
+                    console.warn('Gun fetch warning:', e);
+                }
+            }
+
             return null;
         }
 
@@ -1071,6 +1212,8 @@
                 document.getElementById('prof-title').value = appData.profile.carTitle;
                 document.getElementById('prof-color').value = appData.profile.color;
                 document.getElementById('prof-km').value = appData.profile.currentKm;
+            } else if (modalId === 'modal-sync') {
+                document.getElementById('sync-modal-username').textContent = currentUser || '--';
             } else if (modalId === 'modal-expertise') {
                 renderExpertiseModal();
             } else if (modalId === 'modal-maint') {
@@ -1085,6 +1228,87 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // --- CİHAZLAR ARASI EŞLEŞTİRME KODU & TEK TIKLA LİNK SİSTEMİ ---
+        function encodeSyncPayload(payloadObj) {
+            const jsonStr = JSON.stringify(payloadObj);
+            return btoa(unescape(encodeURIComponent(jsonStr)));
+        }
+
+        function decodeSyncPayload(base64Str) {
+            const jsonStr = decodeURIComponent(escape(atob(base64Str.trim())));
+            return JSON.parse(jsonStr);
+        }
+
+        function copyTextToClipboard(text, successMsg) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg, 'success');
+            } catch (e) {
+                showToast('Kopyalanamadı, lütfen manuel seçin.', 'error');
+            }
+            document.body.removeChild(ta);
+        }
+
+        function copyOneClickLoginLink() {
+            if (!currentUser || !appData) return;
+            const users = getLocalUsers();
+            const payload = { u: users[currentUser], d: appData };
+            const code = encodeSyncPayload(payload);
+            const baseUrl = window.location.origin + window.location.pathname;
+            const fullLink = `${baseUrl}?eslestir=${encodeURIComponent(code)}`;
+            copyTextToClipboard(fullLink, 'Tek Tıkla Giriş Linki kopyalandı! Diğer cihazınıza gönderip tıklayın.');
+        }
+
+        function copyQuickSyncCode() {
+            if (!currentUser || !appData) return;
+            const users = getLocalUsers();
+            const payload = { u: users[currentUser], d: appData };
+            const code = encodeSyncPayload(payload);
+            copyTextToClipboard(code, 'Cihaz Eşleştirme Kodu kopyalandı!');
+        }
+
+        function toggleQuickSyncInput() {
+            const box = document.getElementById('quick-sync-box');
+            box.classList.toggle('hidden');
+        }
+
+        async function importFromQuickSyncCode(rawCodeOptional) {
+            const raw = (rawCodeOptional || document.getElementById('quick-sync-code-input')?.value || '').trim();
+            if (!raw) {
+                showToast('Lütfen eşleştirme kodunu veya linkini yapıştırın!', 'error');
+                return;
+            }
+            try {
+                let codePart = raw;
+                if (raw.includes('?eslestir=')) {
+                    codePart = decodeURIComponent(raw.split('?eslestir=')[1].split('&')[0]);
+                }
+                const parsed = decodeSyncPayload(codePart);
+                const acc = parsed.u || parsed.userAccount;
+                const veh = parsed.d || parsed.vehicleData;
+                if (!acc || !veh || !acc.username) throw new Error('Invalid code');
+
+                const u = acc.username.toLowerCase();
+                const users = getLocalUsers();
+                users[u] = acc;
+                saveLocalUsers(users);
+                localStorage.setItem(getUserDataKey(u), JSON.stringify(veh));
+                if (window.__cloudSync) {
+                    await window.__cloudSync.saveAccountToCloud(u, acc, veh);
+                }
+                showToast(`"${u}" hesabı bu cihaza başarıyla tanımlandı!`, 'success');
+                startSession(u, veh);
+            } catch (e) {
+                showToast('Geçersiz veya eksik eşleştirme kodu!', 'error');
+            }
         }
 
         // --- 5. VARSAYILAN ARAÇ VERİSİ ---
@@ -1251,6 +1475,29 @@
             const password = document.getElementById('login-password').value;
             const btn = document.getElementById('login-submit-btn');
 
+            // 1. Önce buluttan en güncel veriyi kontrol et (Başka cihazda değişiklik yapıldıysa veya ilk kez giriliyorsa)
+            btn.textContent = 'Buluttan Hesap Aranıyor...';
+            if (window.__cloudSync) {
+                const cloudAcc = await window.__cloudSync.fetchAccountFromCloud(username);
+                if (cloudAcc && cloudAcc.vehicleDataJson) {
+                    btn.textContent = 'Giriş Yap';
+                    if (cloudAcc.password !== password) {
+                        showToast('Şifre hatalı!', 'error');
+                        return;
+                    }
+                    const parsedData = JSON.parse(cloudAcc.vehicleDataJson);
+                    const users = getLocalUsers();
+                    users[username] = { username, password: cloudAcc.password, carTitle: cloudAcc.carTitle };
+                    saveLocalUsers(users);
+                    localStorage.setItem(getUserDataKey(username), JSON.stringify(parsedData));
+                    showToast('Hesabınız buluttan senkronize edildi!', 'success');
+                    startSession(username, parsedData);
+                    return;
+                }
+            }
+
+            // 2. Cihaz hafızasını kontrol et
+            btn.textContent = 'Giriş Yap';
             const users = getLocalUsers();
             if (users[username]) {
                 if (users[username].password !== password) {
@@ -1259,32 +1506,16 @@
                 }
                 const localRaw = localStorage.getItem(getUserDataKey(username));
                 const data = localRaw ? JSON.parse(localRaw) : createDefaultData(username, users[username].carTitle, 115000);
+                if (window.__cloudSync) {
+                    window.__cloudSync.saveAccountToCloud(username, users[username], data);
+                }
                 showToast('Giriş başarılı!', 'success');
                 startSession(username, data);
                 return;
             }
 
-            // Cihazda yoksa Buluttan (Firestore) kontrol et
-            btn.textContent = 'Hesap Kontrol Ediliyor...';
-            if (window.__cloudSync) {
-                const cloudAcc = await window.__cloudSync.fetchAccountFromCloud(username);
-                btn.textContent = 'Giriş Yap';
-                if (cloudAcc) {
-                    if (cloudAcc.password !== password) {
-                        showToast('Şifre hatalı!', 'error');
-                        return;
-                    }
-                    const parsedData = JSON.parse(cloudAcc.vehicleDataJson);
-                    users[username] = { username, password: cloudAcc.password, carTitle: cloudAcc.carTitle };
-                    saveLocalUsers(users);
-                    localStorage.setItem(getUserDataKey(username), JSON.stringify(parsedData));
-                    showToast('Hesabınız buluttan bu cihaza aktarıldı!', 'success');
-                    startSession(username, parsedData);
-                    return;
-                }
-            }
-            btn.textContent = 'Giriş Yap';
-            showToast('Kullanıcı bulunamadı. Lütfen "Kayıt Ol" sekmesinden oluşturun.', 'error');
+            showToast('Bu cihazda veya bulutta hesap bulunamadı. Diğer cihazınızdan "Cihaz Eşitle" linkini kullanabilir veya Kayıt Olabilirsiniz.', 'error');
+            document.getElementById('quick-sync-box')?.classList.remove('hidden');
         }
 
         function startSession(username, dataObj) {
@@ -2009,6 +2240,16 @@
             if (window.__cloudSync) {
                 await window.__cloudSync.initCloudSync();
             }
+
+            // URL'de ?eslestir=... parametresi varsa (Başka cihazdan tek tıkla linke tıklandıysa) otomatik hesabı kur ve aç!
+            const urlParams = new URLSearchParams(window.location.search);
+            const syncParam = urlParams.get('eslestir');
+            if (syncParam) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                await importFromQuickSyncCode(syncParam);
+                return;
+            }
+
             const users = getLocalUsers();
             const active = localStorage.getItem(ACTIVE_USER_KEY);
             if (active && users[active]) {

@@ -283,13 +283,71 @@
       };
 
       // =========================================================================
-      // OTOMATİK VERİ KURTARMA MOTORU (Önceki sürümlerde girilen tüm verileri bulur ve geri yükler)
+      // MUAYENE & SİGORTA GERİ SAYIM HESAPLAYICI
+      // =========================================================================
+      const getCountdownDetails = (targetDateStr) => {
+        if (!targetDateStr) {
+          return { totalDays: null, label: "Tarih Girilmedi", detail: "", badgeClass: "bg-gray-800 text-gray-400 border-gray-700", textClass: "text-gray-400" };
+        }
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const parts = targetDateStr.split('-');
+        if (parts.length !== 3) {
+          return { totalDays: null, label: "Geçersiz Tarih", detail: "", badgeClass: "bg-gray-800 text-gray-400 border-gray-700", textClass: "text-gray-400" };
+        }
+        const target = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        const diffTime = target.getTime() - today.getTime();
+        const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (totalDays < 0) {
+          const passed = Math.abs(totalDays);
+          return {
+            totalDays,
+            label: `${passed} Gün Geçti!`,
+            detail: "Süresi Doldu",
+            badgeClass: "bg-rose-950/90 text-rose-300 border-rose-600/60",
+            textClass: "text-rose-400"
+          };
+        }
+        if (totalDays === 0) {
+          return {
+            totalDays: 0,
+            label: "Bugün Son Gün!",
+            detail: "Muayene Günü",
+            badgeClass: "bg-rose-950/90 text-rose-300 border-rose-600/60",
+            textClass: "text-rose-400"
+          };
+        }
+
+        // Ay ve Gün Ayrıntısı
+        const months = Math.floor(totalDays / 30);
+        const remDays = totalDays % 30;
+        const detailStr = months > 0 ? `${months} Ay ${remDays} Gün` : `${totalDays} Gün`;
+
+        if (totalDays <= 30) {
+          return {
+            totalDays,
+            label: `${totalDays} Gün Kaldı`,
+            detail: detailStr,
+            badgeClass: "bg-amber-950/90 text-amber-300 border-amber-500/60",
+            textClass: "text-amber-400"
+          };
+        }
+        return {
+          totalDays,
+          label: `${totalDays} Gün Kaldı`,
+          detail: detailStr,
+          badgeClass: "bg-emerald-950/80 text-emerald-300 border-emerald-600/50",
+          textClass: "text-emerald-300"
+        };
+      };
+
+      // =========================================================================
+      // OTOMATİK VERİ KURTARMA MOTORU (Önceki verileri korur ve birleştirir)
       // =========================================================================
       const recoverPreviousData = async (firestoreDb, uid) => {
         let recoveredCount = 0;
         try {
-          // 1. Önceki Canvas sürümündeki Firestore yollarını kontrol et:
-          // Yol A: artifacts/{appId}/users/{uid}/carData/main
           const oldDocA = await getDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/carData/main`));
           if (oldDocA.exists()) {
             const d = oldDocA.data();
@@ -313,7 +371,6 @@
             }
           }
 
-          // Yol B: artifacts/{appId}/users/{uid}/maintenances (Eski koleksiyon adı)
           const oldMaintSnap = await getDocs(collection(firestoreDb, `artifacts/${appId}/users/${uid}/maintenances`));
           if (!oldMaintSnap.empty) {
             for (const docItem of oldMaintSnap.docs) {
@@ -333,13 +390,11 @@
             }
           }
 
-          // Yol C: artifacts/{appId}/users/{uid}/profile/carInfo
           const oldProfileCar = await getDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/profile/carInfo`));
           if (oldProfileCar.exists()) {
             await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisGarage/carInfo`), oldProfileCar.data(), { merge: true });
           }
 
-          // 2. Tarayıcı LocalStorage içindeki tüm eski Auris anahtarlarını tara ve geri yükle
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (!key) continue;
@@ -347,7 +402,6 @@
               try {
                 const raw = JSON.parse(localStorage.getItem(key));
                 if (!raw) continue;
-                // Eğer kullanıcı bazlı obje ise veya doğrudan veri objesi ise:
                 const candidates = raw.maintenances ? [raw] : Object.values(raw).filter(v => v && typeof v === 'object');
                 for (const c of candidates) {
                   const dataObj = c.data || c;
@@ -371,10 +425,10 @@
           }
 
           if (recoveredCount > 0) {
-            showMessage(`Önceki sürümde girdiğin ${recoveredCount} kayıt bulundu ve geri yüklendi!`, 'success');
+            showMessage(`Kayıtların senkronize edildi (${recoveredCount} kayıt).`, 'success');
           }
         } catch (err) {
-          console.error("Veri kurtarma taraması hatası:", err);
+          console.error("Veri tarama hatası:", err);
         }
       };
 
@@ -668,6 +722,10 @@
       const totalNotesSpend = notesList.reduce((acc, item) => acc + (Number(item.cost) || 0), 0);
       const changedOrPaintedParts = BODY_PARTS.filter(bp => carInfo.bodyParts?.[bp.id] && carInfo.bodyParts[bp.id] !== "Orijinal");
 
+      // Muayene ve Sigorta Geri Sayım Bilgileri
+      const inspectionCountdown = getCountdownDetails(carInfo.nextInspection);
+      const insuranceCountdown = getCountdownDetails(carInfo.insuranceEnd);
+
       if (!isAuthReady) {
         return <div className="min-h-screen flex items-center justify-center text-emerald-300 text-lg font-medium">Yükleniyor...</div>;
       }
@@ -756,7 +814,7 @@
               </p>
             </div>
 
-            {/* ÖZET KARTLARI */}
+            {/* ÖZET KARTLARI (MUAYENE GERİ SAYIMI EKLENDİ) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 mb-7">
               <div onClick={() => setActiveModal('ayarlar')} className="elegant-card p-4 cursor-pointer">
                 <span className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Güncel Kilometre</span>
@@ -773,15 +831,25 @@
               </div>
 
               <div onClick={() => setActiveModal('vergi')} className="elegant-card p-4 cursor-pointer">
-                <span className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Muayene & MTV</span>
-                <p className="text-base sm:text-lg font-bold text-white truncate">{formatDisplayDate(carInfo.nextInspection)}</p>
-                <div className="flex gap-1.5 mt-1.5">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${carInfo.mtv1Paid ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'}`}>
-                    1.MTV {carInfo.mtv1Paid ? '✓' : '✗'}
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Muayene Geri Sayım</span>
+                  <span className="text-[10px] text-gray-400">{formatDisplayDate(carInfo.nextInspection)}</span>
+                </div>
+                <p className={`text-lg sm:text-xl font-extrabold ${inspectionCountdown.textClass}`}>
+                  ⏳ {inspectionCountdown.label}
+                </p>
+                <div className="flex items-center justify-between gap-1 mt-1.5">
+                  <span className="text-[10px] text-gray-400 truncate">
+                    {inspectionCountdown.detail ? `(${inspectionCountdown.detail})` : ''}
                   </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${carInfo.mtv2Paid ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'}`}>
-                    2.MTV {carInfo.mtv2Paid ? '✓' : '✗'}
-                  </span>
+                  <div className="flex gap-1">
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${carInfo.mtv1Paid ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'}`}>
+                      1.MTV {carInfo.mtv1Paid ? '✓' : '✗'}
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${carInfo.mtv2Paid ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'}`}>
+                      2.MTV {carInfo.mtv2Paid ? '✓' : '✗'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1108,7 +1176,7 @@
             </div>
           )}
 
-          {/* VERGİ MODALI */}
+          {/* VERGİ & MUAYENE GERİ SAYIM MODALI */}
           {activeModal === 'vergi' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-lg my-auto">
@@ -1116,19 +1184,49 @@
                   <h2 className="text-xl font-bold elegant-title-gold">📅 Muayene, Sigorta & MTV</h2>
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
+
+                {/* Canlı Geri Sayım Kutusu */}
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className={`p-3.5 rounded-2xl border ${inspectionCountdown.badgeClass}`}>
+                    <span className="text-[10px] uppercase font-bold tracking-wider block opacity-80">TÜVTÜRK Muayene</span>
+                    <p className="text-base sm:text-lg font-extrabold mt-0.5">⏳ {inspectionCountdown.label}</p>
+                    <span className="text-[11px] opacity-90 block mt-0.5">{inspectionCountdown.detail} ({formatDisplayDate(carInfo.nextInspection)})</span>
+                  </div>
+                  <div className={`p-3.5 rounded-2xl border ${insuranceCountdown.badgeClass}`}>
+                    <span className="text-[10px] uppercase font-bold tracking-wider block opacity-80">Trafik Sigortası</span>
+                    <p className="text-base sm:text-lg font-extrabold mt-0.5">🛡️ {insuranceCountdown.label}</p>
+                    <span className="text-[11px] opacity-90 block mt-0.5">{insuranceCountdown.detail} ({formatDisplayDate(carInfo.insuranceEnd)})</span>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-300 mb-1">Son Muayene</label>
-                      <input type="date" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.lastInspection || ''} onChange={(e) => setCarInfo({...carInfo, lastInspection: e.target.value})} />
+                      <label className="block text-xs text-gray-300 mb-1">Son Yapılan Muayene Tarihi</label>
+                      <input 
+                        type="date" 
+                        className="input-dark w-full p-3 rounded-xl text-sm" 
+                        value={carInfo.lastInspection || ''} 
+                        onChange={(e) => {
+                          const d = e.target.value;
+                          let nextD = carInfo.nextInspection;
+                          if (d) {
+                            const parts = d.split('-');
+                            if (parts.length === 3) {
+                              nextD = `${Number(parts[0]) + 2}-${parts[1]}-${parts[2]}`;
+                            }
+                          }
+                          setCarInfo({...carInfo, lastInspection: d, nextInspection: nextD});
+                        }} 
+                      />
                     </div>
                     <div>
-                      <label className="block text-xs text-emerald-300 font-bold mb-1">Gelecek Muayene</label>
-                      <input type="date" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.nextInspection || ''} onChange={(e) => setCarInfo({...carInfo, nextInspection: e.target.value})} />
+                      <label className="block text-xs text-emerald-300 font-bold mb-1">Gelecek Muayene Tarihi (+2 Yıl)</label>
+                      <input type="date" className="input-dark w-full p-3 rounded-xl text-sm border-emerald-500/50" value={carInfo.nextInspection || ''} onChange={(e) => setCarInfo({...carInfo, nextInspection: e.target.value})} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Trafik Sigortası Bitiş</label>
+                    <label className="block text-xs text-gray-300 mb-1">Trafik Sigortası Bitiş Tarihi</label>
                     <input type="date" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.insuranceEnd || ''} onChange={(e) => setCarInfo({...carInfo, insuranceEnd: e.target.value})} />
                   </div>
                   <div className="p-4 bg-black/35 rounded-2xl border border-emerald-900/40 space-y-3">

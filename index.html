@@ -96,11 +96,11 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-    import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
     window.firebaseAPI = { 
       initializeApp, 
       getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs, getDoc
+      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot
     };
   </script>
 
@@ -186,7 +186,7 @@
       const { 
         initializeApp, 
         getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-        getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs, getDoc
+        getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot
       } = window.firebaseAPI;
 
       const firebaseConfig = {
@@ -267,7 +267,7 @@
 
       const showMessage = (content, type = 'success') => {
         setMessage({ content, type });
-        setTimeout(() => setMessage(null), 4500);
+        setTimeout(() => setMessage(null), 4000);
       };
 
       const formatDisplayDate = (dateStr) => {
@@ -282,9 +282,7 @@
         return num.toLocaleString('tr-TR') + " ₺";
       };
 
-      // =========================================================================
       // MUAYENE & SİGORTA GERİ SAYIM HESAPLAYICI
-      // =========================================================================
       const getCountdownDetails = (targetDateStr) => {
         if (!targetDateStr) {
           return { totalDays: null, label: "Tarih Girilmedi", detail: "", badgeClass: "bg-gray-800 text-gray-400 border-gray-700", textClass: "text-gray-400" };
@@ -300,10 +298,9 @@
         const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (totalDays < 0) {
-          const passed = Math.abs(totalDays);
           return {
             totalDays,
-            label: `${passed} Gün Geçti!`,
+            label: `${Math.abs(totalDays)} Gün Geçti!`,
             detail: "Süresi Doldu",
             badgeClass: "bg-rose-950/90 text-rose-300 border-rose-600/60",
             textClass: "text-rose-400"
@@ -319,7 +316,6 @@
           };
         }
 
-        // Ay ve Gün Ayrıntısı
         const months = Math.floor(totalDays / 30);
         const remDays = totalDays % 30;
         const detailStr = months > 0 ? `${months} Ay ${remDays} Gün` : `${totalDays} Gün`;
@@ -342,94 +338,41 @@
         };
       };
 
-      // =========================================================================
-      // OTOMATİK VERİ KURTARMA MOTORU (Önceki verileri korur ve birleştirir)
-      // =========================================================================
-      const recoverPreviousData = async (firestoreDb, uid) => {
-        let recoveredCount = 0;
-        try {
-          const oldDocA = await getDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/carData/main`));
-          if (oldDocA.exists()) {
-            const d = oldDocA.data();
-            if (d.carInfo) await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisGarage/carInfo`), d.carInfo, { merge: true });
-            if (Array.isArray(d.maintenances)) {
-              for (const m of d.maintenances) {
-                const mId = m.id || ('rec_' + Math.random().toString(36).substring(2, 9));
-                await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisMaintenances`, String(mId)), {
-                  date: m.date || getTodayDate(),
-                  km: Number(m.km) || 0,
-                  title: m.title || m.type || "Bakım Kaydı",
-                  selectedParts: m.selectedParts || m.parts || [],
-                  partsCost: Number(m.partsCost) || 0,
-                  laborCost: Number(m.laborCost) || 0,
-                  totalCost: Number(m.totalCost || m.cost) || 0,
-                  serviceName: m.serviceName || "",
-                  notes: m.notes || m.note || ""
-                }, { merge: true });
-                recoveredCount++;
-              }
-            }
-          }
+      // GÜVENLİ DIŞA AKTARMA (.TXT ÖZET RAPOR VE .JSON TAM YEDEK)
+      const exportGarageSummaryTxt = () => {
+        const lines = [
+          `=== ${carInfo.carTitle} (${carInfo.plate || 'Plakasız'}) ===`,
+          `Güncel KM: ${carInfo.currentKm} km | Hedef Bakım KM: ${carInfo.nextOilKm} km`,
+          `Gelecek Muayene: ${formatDisplayDate(carInfo.nextInspection)} | Sigorta Bitiş: ${formatDisplayDate(carInfo.insuranceEnd)}`,
+          `\n--- BAKIM GEÇMİŞİ (${maintenances.length}) ---`,
+          ...maintenances.map(m => `• ${formatDisplayDate(m.date)} (${m.km} km) - ${m.title} | Tutar: ${formatCurrency(m.totalCost)}\n  Parçalar: ${(m.selectedParts || []).join(', ')}\n  Not: ${m.notes || '-'}`),
+          `\n--- ARAÇ NOTLARI (${notesList.length}) ---`,
+          ...notesList.map(n => `• ${formatDisplayDate(n.date)} - ${n.title} (${formatCurrency(n.cost)}): ${n.content}`)
+        ];
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'auris_garaj_ozet_rapor.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage("Özet rapor (.txt) indirildi!", "success");
+      };
 
-          const oldMaintSnap = await getDocs(collection(firestoreDb, `artifacts/${appId}/users/${uid}/maintenances`));
-          if (!oldMaintSnap.empty) {
-            for (const docItem of oldMaintSnap.docs) {
-              const m = docItem.data();
-              await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisMaintenances`, docItem.id), {
-                date: m.date || getTodayDate(),
-                km: Number(m.km) || 0,
-                title: m.title || m.type || "Bakım Kaydı",
-                selectedParts: m.selectedParts || m.parts || [],
-                partsCost: Number(m.partsCost) || 0,
-                laborCost: Number(m.laborCost) || 0,
-                totalCost: Number(m.totalCost || m.cost) || 0,
-                serviceName: m.serviceName || "",
-                notes: m.notes || m.note || ""
-              }, { merge: true });
-              recoveredCount++;
-            }
-          }
-
-          const oldProfileCar = await getDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/profile/carInfo`));
-          if (oldProfileCar.exists()) {
-            await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisGarage/carInfo`), oldProfileCar.data(), { merge: true });
-          }
-
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (!key) continue;
-            if (key.toLowerCase().includes('auris')) {
-              try {
-                const raw = JSON.parse(localStorage.getItem(key));
-                if (!raw) continue;
-                const candidates = raw.maintenances ? [raw] : Object.values(raw).filter(v => v && typeof v === 'object');
-                for (const c of candidates) {
-                  const dataObj = c.data || c;
-                  if (Array.isArray(dataObj.maintenances)) {
-                    for (const m of dataObj.maintenances) {
-                      const mId = String(m.id || ('loc_' + Math.random().toString(36).substring(2, 9)));
-                      await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisMaintenances`, mId), {
-                        date: m.date || getTodayDate(),
-                        km: Number(m.km) || 0,
-                        title: m.title || m.type || "Bakım Kaydı",
-                        selectedParts: m.selectedParts || m.parts || [],
-                        totalCost: Number(m.totalCost || m.cost) || 0,
-                        notes: m.notes || m.note || ""
-                      }, { merge: true });
-                      recoveredCount++;
-                    }
-                  }
-                }
-              } catch (e) {}
-            }
-          }
-
-          if (recoveredCount > 0) {
-            showMessage(`Kayıtların senkronize edildi (${recoveredCount} kayıt).`, 'success');
-          }
-        } catch (err) {
-          console.error("Veri tarama hatası:", err);
-        }
+      const exportFullJsonBackup = () => {
+        const backupObj = { carInfo, maintenances, notesList, experReports, exportDate: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `auris_garaj_yedek_${getTodayDate()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage("Tam yedek dosyası (.json) indirildi!", "success");
       };
 
       useEffect(() => {
@@ -442,9 +385,6 @@
           const unsubscribe = onAuthStateChanged(authInstance, user => {
             setUserId(user ? user.uid : null);
             setIsAuthReady(true);
-            if (user) {
-              recoverPreviousData(firestoreInstance, user.uid);
-            }
           });
           return () => unsubscribe();
         } catch (err) {
@@ -722,7 +662,6 @@
       const totalNotesSpend = notesList.reduce((acc, item) => acc + (Number(item.cost) || 0), 0);
       const changedOrPaintedParts = BODY_PARTS.filter(bp => carInfo.bodyParts?.[bp.id] && carInfo.bodyParts[bp.id] !== "Orijinal");
 
-      // Muayene ve Sigorta Geri Sayım Bilgileri
       const inspectionCountdown = getCountdownDetails(carInfo.nextInspection);
       const insuranceCountdown = getCountdownDetails(carInfo.insuranceEnd);
 
@@ -814,7 +753,7 @@
               </p>
             </div>
 
-            {/* ÖZET KARTLARI (MUAYENE GERİ SAYIMI EKLENDİ) */}
+            {/* ÖZET KARTLARI (MUAYENE GERİ SAYIMLI) */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 mb-7">
               <div onClick={() => setActiveModal('ayarlar')} className="elegant-card p-4 cursor-pointer">
                 <span className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Güncel Kilometre</span>
@@ -895,7 +834,7 @@
               </button>
             </div>
 
-            {/* BAKIM LİSTESİ */}
+            {/* BAKIM LİSTESİ (TEHLİKELİ TARAMA TUŞU KALDIRILDI) */}
             <div className="space-y-6">
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -903,9 +842,6 @@
                     <span>Bakım ve Değişen Parça Geçmişi</span>
                     <span className="text-xs bg-emerald-900/50 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-700/40">{maintenances.length}</span>
                   </h2>
-                  <button onClick={() => recoverPreviousData(db, userId)} className="text-xs text-amber-300 hover:underline">
-                    🔄 Eski Kayıtları Tara / Getir
-                  </button>
                 </div>
 
                 {maintenances.length > 0 ? (
@@ -952,7 +888,7 @@
                   </div>
                 ) : (
                   <div className="text-center py-10 bg-black/20 rounded-2xl border border-dashed border-emerald-900/40">
-                    <p className="text-gray-400 text-sm">Henüz bakım kaydı görünmüyor. "+ Bakım & Parça" düğmesinden ekleyebilir veya sağ üstteki "Eski Kayıtları Tara" düğmesine basabilirsin.</p>
+                    <p className="text-gray-400 text-sm">Henüz bakım kaydı eklenmemiş. "+ Bakım & Parça" düğmesinden ekleyebilirsin.</p>
                   </div>
                 )}
               </div>
@@ -1185,7 +1121,6 @@
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
 
-                {/* Canlı Geri Sayım Kutusu */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <div className={`p-3.5 rounded-2xl border ${inspectionCountdown.badgeClass}`}>
                     <span className="text-[10px] uppercase font-bold tracking-wider block opacity-80">TÜVTÜRK Muayene</span>
@@ -1282,7 +1217,7 @@
             </div>
           )}
 
-          {/* AYARLAR MODALI */}
+          {/* AYARLAR & GÜVENLİ YEDEK İNDİRME MODALI */}
           {activeModal === 'ayarlar' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-md my-auto">
@@ -1303,8 +1238,22 @@
                     <label className="block text-xs text-gray-300 mb-1">Plaka</label>
                     <input type="text" className="input-dark w-full p-3 rounded-xl text-sm uppercase" value={carInfo.plate} onChange={(e) => setCarInfo({...carInfo, plate: e.target.value.toUpperCase()})} />
                   </div>
-                  <button onClick={() => { saveCarInfoToCloud(carInfo); setActiveModal(null); }} className="btn-black w-full py-3.5 rounded-xl font-bold text-emerald-300">Kaydet</button>
-                  <button onClick={handleSignOut} className="btn-black w-full py-3 rounded-xl font-semibold text-rose-400 border-rose-900/50 text-xs mt-4">Çıkış Yap</button>
+                  <button onClick={() => { saveCarInfoToCloud(carInfo); setActiveModal(null); }} className="btn-black w-full py-3.5 rounded-xl font-bold text-emerald-300">Ayarları Kaydet</button>
+                  
+                  {/* Güvenli Dışa Aktarma Seçenekleri (Veri Ezme Riski Yoktur) */}
+                  <div className="pt-4 border-t border-emerald-900/40 space-y-2">
+                    <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Güvenli Yedekleme (Sadece İndirir)</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={exportGarageSummaryTxt} className="btn-black py-2.5 px-3 rounded-xl text-xs font-semibold text-amber-300">
+                        📄 Özet Rapor (.txt)
+                      </button>
+                      <button onClick={exportFullJsonBackup} className="btn-black py-2.5 px-3 rounded-xl text-xs font-semibold text-sky-300">
+                        💾 Tam Yedek (.json)
+                      </button>
+                    </div>
+                  </div>
+
+                  <button onClick={handleSignOut} className="btn-black w-full py-3 rounded-xl font-semibold text-rose-400 border-rose-900/50 text-xs mt-2">Çıkış Yap</button>
                 </div>
               </div>
             </div>

@@ -5,26 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auris Garaj (文庫)</title>
   
-  <!-- Tarayıcı Sekme İkonu (Favicon) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%230d1f17' stroke='%23eab308' stroke-width='4'/%3E%3Cpath d='M25 72 L35 48 C38 42 44 40 50 40 L70 40 C76 40 82 42 85 48 L95 72 Z' fill='%231e8689'/%3E%3Ccircle cx='38' cy='76' r='10' fill='%23eab308'/%3E%3Ccircle cx='82' cy='76' r='10' fill='%23eab308'/%3E%3C/svg%3E" />
   
-  <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
   
-  <!-- React Kütüphaneleri -->
   <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-  
-  <!-- Babel (JSX'i tarayıcıda çalıştırmak için) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <style>
-    /* ZARİF KOYU ÇAM YEŞİLİ & ALTIN TEMA */
     body {
       font-family: 'Inter', sans-serif;
       background: radial-gradient(circle at top, #132a20 0%, #09130e 100%);
@@ -34,34 +26,28 @@
       letter-spacing: -0.01em;
     }
     
-    h1, h2, h3, .font-montserrat {
-      font-family: 'Montserrat', sans-serif;
-    }
+    h1, h2, h3, .font-montserrat { font-family: 'Montserrat', sans-serif; }
 
-    /* Zarif Altın Başlık Efekti */
     .elegant-title-gold {
       color: #fef9c3;
       text-shadow: 0 0 18px rgba(234, 179, 8, 0.35);
     }
 
-    /* Zarif Turkuaz Alt Başlık */
     .elegant-subtitle {
       color: #99f6e4;
       text-shadow: 0 0 12px rgba(20, 184, 166, 0.25);
     }
 
-    /* İnce Cam Panel Efekti */
     .glass-panel {
-      background: rgba(12, 26, 19, 0.82);
+      background: rgba(12, 26, 19, 0.85);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(52, 211, 153, 0.14);
+      border: 1px solid rgba(52, 211, 153, 0.16);
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
     }
 
-    /* Zarif Kart Stili */
     .elegant-card {
-      background: linear-gradient(145deg, rgba(20, 43, 33, 0.75), rgba(8, 17, 13, 0.9));
+      background: linear-gradient(145deg, rgba(20, 43, 33, 0.78), rgba(8, 17, 13, 0.92));
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
@@ -72,11 +58,10 @@
       transform: translateY(-2px);
     }
 
-    /* Siyah / Koyu Yeşil Zarif Butonlar */
     .btn-black {
       background: linear-gradient(180deg, #0f2119 0%, #07100c 100%);
       color: #f1f5f9;
-      border: 1px solid rgba(52, 211, 153, 0.2);
+      border: 1px solid rgba(52, 211, 153, 0.22);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 10px rgba(0,0,0,0.35);
       transition: all 0.25s ease;
     }
@@ -86,14 +71,9 @@
       box-shadow: 0 0 15px rgba(234, 179, 8, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
       transform: translateY(-1px);
     }
-    .btn-black:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
 
-    /* Girdi Kutuları */
     .input-dark {
-      background-color: rgba(6, 14, 10, 0.8);
+      background-color: rgba(6, 14, 10, 0.85);
       border: 1px solid rgba(52, 211, 153, 0.22);
       color: #ffffff;
       transition: all 0.25s ease;
@@ -104,57 +84,45 @@
       outline: none;
     }
 
-    /* Kaydırma çubuğu */
     .modal-scroll::-webkit-scrollbar { width: 6px; }
     .modal-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
     .modal-scroll::-webkit-scrollbar-thumb { background: #1e3a2f; border-radius: 10px; }
-    .modal-scroll::-webkit-scrollbar-thumb:hover { background: #2d5746; }
   </style>
 </head>
 <body>
 
   <div id="root"></div>
 
-  <!-- Firebase JS modules (Bunko ile Birebir Aynı Altyapı) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-    import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
     window.firebaseAPI = { 
       initializeApp, 
       getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs
+      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, getDocs, getDoc
     };
   </script>
 
-  <!-- React Uygulaması -->
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // AURİS 1.33 HAZIR PARÇA LİSTESİ (Volan ve Şanzıman Yağı Eklendi)
     const PREDEFINED_PARTS = [
-      // Periyodik Bakım
       { name: "Motor Yağı (5W-30 / 0W-20)", category: "Periyodik" },
       { name: "Yağ Filtresi", category: "Periyodik" },
       { name: "Hava Filtresi", category: "Periyodik" },
       { name: "Polen (Kabin) Filtresi", category: "Periyodik" },
       { name: "Karter Tapası ve Contası", category: "Periyodik" },
-      
-      // Şanzıman & Debriyaj & Volan
       { name: "Volan (Volant Dişlisi)", category: "Şanzıman & Aktarma" },
       { name: "Şanzıman Yağı (75W LV Manuel)", category: "Şanzıman & Aktarma" },
       { name: "Debriyaj Seti (Baskı - Balata - Bilya)", category: "Şanzıman & Aktarma" },
       { name: "Debriyaj Üst / Alt Merkez", category: "Şanzıman & Aktarma" },
-
-      // Ağır & Motor Bakımı
       { name: "İridyum Buji Takımı (4 Adet Denso)", category: "Motor & Ateşleme" },
       { name: "V Kayışı (Alternatör Kayışı)", category: "Motor & Ateşleme" },
       { name: "Pembe Antifriz (Toyota SLLC)", category: "Motor & Ateşleme" },
       { name: "Devirdaim (Su Pompası)", category: "Motor & Ateşleme" },
       { name: "Ateşleme Bobini", category: "Motor & Ateşleme" },
       { name: "Boğaz Kelebeği & MAF Temizliği", category: "Motor & Ateşleme" },
-
-      // Fren & Ön Takım
       { name: "Ön Fren Balataları", category: "Fren & Yürüyen" },
       { name: "Arka Fren Balataları", category: "Fren & Yürüyen" },
       { name: "Ön Fren Diskleri", category: "Fren & Yürüyen" },
@@ -163,8 +131,6 @@
       { name: "Z Rotlar (Askı Rotları)", category: "Fren & Yürüyen" },
       { name: "Salıncak / Burçlar", category: "Fren & Yürüyen" },
       { name: "Amortisör & Takozları", category: "Fren & Yürüyen" },
-
-      // Elektrik & Diğer
       { name: "Akü (12V 60Ah)", category: "Genel & Elektrik" },
       { name: "Silecek Süpürgeleri (Ön / Arka)", category: "Genel & Elektrik" },
       { name: "Lastik Değişimi / Rot Balans", category: "Genel & Elektrik" },
@@ -196,12 +162,12 @@
       { id: "airbag", label: "Airbag (Hava Yastıkları)" }
     ];
 
-    constPAINT_STATUSES = [
-      { value: "Orijinal", color: "bg-emerald-950/70 text-emerald-300 border-emerald-700/60", dot: "#10b981" },
-      { value: "Lokal Boyalı", color: "bg-amber-950/70 text-amber-300 border-amber-700/60", dot: "#f59e0b" },
-      { value: "Boyalı", color: "bg-orange-950/70 text-orange-300 border-orange-700/60", dot: "#f97316" },
-      { value: "Değişen", color: "bg-rose-950/70 text-rose-300 border-rose-700/60", dot: "#f43f5e" },
-      { value: "Sök-Tak / Rötuş", color: "bg-sky-950/70 text-sky-300 border-sky-700/60", dot: "#0ea5e9" }
+    const PAINT_STATUSES = [
+      { value: "Orijinal", color: "bg-emerald-950/70 text-emerald-300 border-emerald-700/60" },
+      { value: "Lokal Boyalı", color: "bg-amber-950/70 text-amber-300 border-amber-700/60" },
+      { value: "Boyalı", color: "bg-orange-950/70 text-orange-300 border-orange-700/60" },
+      { value: "Değişen", color: "bg-rose-950/70 text-rose-300 border-rose-700/60" },
+      { value: "Sök-Tak / Rötuş", color: "bg-sky-950/70 text-sky-300 border-sky-700/60" }
     ];
 
     function AurisLogo({ size = "w-20 h-20" }) {
@@ -220,10 +186,9 @@
       const { 
         initializeApp, 
         getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-        getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot
+        getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, getDocs, getDoc
       } = window.firebaseAPI;
 
-      // BUNKO İLE AYNI FIREBASE YAPILANDIRMASI (Tüm cihazlardan anında erişim sağlar)
       const firebaseConfig = {
         apiKey: "AIzaSyCbXDdwnz0LNU7IXr4KO__usfkjYYaHJpo",
         authDomain: "okudugumkitaplarapp.firebaseapp.com",
@@ -246,7 +211,6 @@
       const [message, setMessage] = useState(null);
       const [confirmation, setConfirmation] = useState(null);
 
-      // Araç Genel Bilgileri
       const [carInfo, setCarInfo] = useState({
         carTitle: "2016 Toyota Auris 1.33 Life",
         plate: "",
@@ -263,15 +227,11 @@
         bodyParts: {}
       });
 
-      // Koleksiyonlar
       const [maintenances, setMaintenances] = useState([]);
       const [notesList, setNotesList] = useState([]);
       const [experReports, setExperReports] = useState([]);
+      const [activeModal, setActiveModal] = useState(null);
 
-      // Açılır Pencere (Modal) Kontrolleri
-      const [activeModal, setActiveModal] = useState(null); // 'bakim', 'kaporta', 'vergi', 'notlar', 'exper', 'ayarlar'
-
-      // Bakım Formu (Manuel tutar + Not destekli)
       const getTodayDate = () => new Date().toISOString().split('T')[0];
       const [editingMaintenanceId, setEditingMaintenanceId] = useState(null);
       const [maintForm, setMaintForm] = useState({
@@ -287,7 +247,6 @@
         notes: ""
       });
 
-      // Serbest Araç Notu Formu
       const [editingNoteId, setEditingNoteId] = useState(null);
       const [noteForm, setNoteForm] = useState({
         date: getTodayDate(),
@@ -297,7 +256,6 @@
         content: ""
       });
 
-      // Ekspertiz Raporu Formu
       const [experForm, setExperForm] = useState({
         date: getTodayDate(),
         firm: "",
@@ -309,7 +267,7 @@
 
       const showMessage = (content, type = 'success') => {
         setMessage({ content, type });
-        setTimeout(() => setMessage(null), 4000);
+        setTimeout(() => setMessage(null), 4500);
       };
 
       const formatDisplayDate = (dateStr) => {
@@ -324,7 +282,102 @@
         return num.toLocaleString('tr-TR') + " ₺";
       };
 
-      // Firebase Başlatma
+      // =========================================================================
+      // OTOMATİK VERİ KURTARMA MOTORU (Önceki sürümlerde girilen tüm verileri bulur ve geri yükler)
+      // =========================================================================
+      const recoverPreviousData = async (firestoreDb, uid) => {
+        let recoveredCount = 0;
+        try {
+          // 1. Önceki Canvas sürümündeki Firestore yollarını kontrol et:
+          // Yol A: artifacts/{appId}/users/{uid}/carData/main
+          const oldDocA = await getDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/carData/main`));
+          if (oldDocA.exists()) {
+            const d = oldDocA.data();
+            if (d.carInfo) await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisGarage/carInfo`), d.carInfo, { merge: true });
+            if (Array.isArray(d.maintenances)) {
+              for (const m of d.maintenances) {
+                const mId = m.id || ('rec_' + Math.random().toString(36).substring(2, 9));
+                await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisMaintenances`, String(mId)), {
+                  date: m.date || getTodayDate(),
+                  km: Number(m.km) || 0,
+                  title: m.title || m.type || "Bakım Kaydı",
+                  selectedParts: m.selectedParts || m.parts || [],
+                  partsCost: Number(m.partsCost) || 0,
+                  laborCost: Number(m.laborCost) || 0,
+                  totalCost: Number(m.totalCost || m.cost) || 0,
+                  serviceName: m.serviceName || "",
+                  notes: m.notes || m.note || ""
+                }, { merge: true });
+                recoveredCount++;
+              }
+            }
+          }
+
+          // Yol B: artifacts/{appId}/users/{uid}/maintenances (Eski koleksiyon adı)
+          const oldMaintSnap = await getDocs(collection(firestoreDb, `artifacts/${appId}/users/${uid}/maintenances`));
+          if (!oldMaintSnap.empty) {
+            for (const docItem of oldMaintSnap.docs) {
+              const m = docItem.data();
+              await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisMaintenances`, docItem.id), {
+                date: m.date || getTodayDate(),
+                km: Number(m.km) || 0,
+                title: m.title || m.type || "Bakım Kaydı",
+                selectedParts: m.selectedParts || m.parts || [],
+                partsCost: Number(m.partsCost) || 0,
+                laborCost: Number(m.laborCost) || 0,
+                totalCost: Number(m.totalCost || m.cost) || 0,
+                serviceName: m.serviceName || "",
+                notes: m.notes || m.note || ""
+              }, { merge: true });
+              recoveredCount++;
+            }
+          }
+
+          // Yol C: artifacts/{appId}/users/{uid}/profile/carInfo
+          const oldProfileCar = await getDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/profile/carInfo`));
+          if (oldProfileCar.exists()) {
+            await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisGarage/carInfo`), oldProfileCar.data(), { merge: true });
+          }
+
+          // 2. Tarayıcı LocalStorage içindeki tüm eski Auris anahtarlarını tara ve geri yükle
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key) continue;
+            if (key.toLowerCase().includes('auris')) {
+              try {
+                const raw = JSON.parse(localStorage.getItem(key));
+                if (!raw) continue;
+                // Eğer kullanıcı bazlı obje ise veya doğrudan veri objesi ise:
+                const candidates = raw.maintenances ? [raw] : Object.values(raw).filter(v => v && typeof v === 'object');
+                for (const c of candidates) {
+                  const dataObj = c.data || c;
+                  if (Array.isArray(dataObj.maintenances)) {
+                    for (const m of dataObj.maintenances) {
+                      const mId = String(m.id || ('loc_' + Math.random().toString(36).substring(2, 9)));
+                      await setDoc(doc(firestoreDb, `artifacts/${appId}/users/${uid}/aurisMaintenances`, mId), {
+                        date: m.date || getTodayDate(),
+                        km: Number(m.km) || 0,
+                        title: m.title || m.type || "Bakım Kaydı",
+                        selectedParts: m.selectedParts || m.parts || [],
+                        totalCost: Number(m.totalCost || m.cost) || 0,
+                        notes: m.notes || m.note || ""
+                      }, { merge: true });
+                      recoveredCount++;
+                    }
+                  }
+                }
+              } catch (e) {}
+            }
+          }
+
+          if (recoveredCount > 0) {
+            showMessage(`Önceki sürümde girdiğin ${recoveredCount} kayıt bulundu ve geri yüklendi!`, 'success');
+          }
+        } catch (err) {
+          console.error("Veri kurtarma taraması hatası:", err);
+        }
+      };
+
       useEffect(() => {
         try {
           const app = initializeApp(firebaseConfig);
@@ -335,6 +388,9 @@
           const unsubscribe = onAuthStateChanged(authInstance, user => {
             setUserId(user ? user.uid : null);
             setIsAuthReady(true);
+            if (user) {
+              recoverPreviousData(firestoreInstance, user.uid);
+            }
           });
           return () => unsubscribe();
         } catch (err) {
@@ -342,7 +398,6 @@
         }
       }, []);
 
-      // Verileri Dinleme (Firestore)
       useEffect(() => {
         if (!isAuthReady || !db || !userId) return;
 
@@ -373,7 +428,6 @@
         return () => { infoUnsub(); maintUnsub(); notesUnsub(); experUnsub(); };
       }, [isAuthReady, db, userId]);
 
-      // Giriş / Kayıt Fonksiyonları
       const handleLogin = async () => {
         setAuthError('');
         try {
@@ -399,7 +453,6 @@
         try { await signOut(auth); } catch (e) {}
       };
 
-      // Araç Bilgisi Kaydetme
       const saveCarInfoToCloud = async (updatedInfo, successMsg = "Bilgiler güncellendi!") => {
         try {
           await setDoc(doc(db, `artifacts/${appId}/users/${userId}/aurisGarage/carInfo`), updatedInfo, { merge: true });
@@ -409,7 +462,6 @@
         }
       };
 
-      // Parça Seçimi Ekle / Çıkar
       const togglePartSelection = (partName) => {
         const exists = maintForm.selectedParts.includes(partName);
         if (exists) {
@@ -443,7 +495,6 @@
         }
       };
 
-      // Parça + İşçilik Girildiğinde Toplam Tutarı Otomatik Öner (Ama Manuel Değiştirilebilir Bırak)
       const handlePartsOrLaborChange = (field, value) => {
         const updated = { ...maintForm, [field]: value };
         const pCost = Number(field === 'partsCost' ? value : maintForm.partsCost) || 0;
@@ -454,7 +505,6 @@
         setMaintForm(updated);
       };
 
-      // Bakım Kaydet / Güncelle
       const handleSaveMaintenance = () => {
         if (!maintForm.date) return showMessage("Lütfen tarih girin.", "error");
         setConfirmation({
@@ -541,7 +591,6 @@
         });
       };
 
-      // Not Ekle / Güncelle / Sil
       const handleSaveNote = () => {
         if (!noteForm.title.trim() && !noteForm.content.trim()) {
           return showMessage("Lütfen not başlığı veya içeriği yazın.", "error");
@@ -585,7 +634,6 @@
         });
       };
 
-      // Ekspertiz Raporu Ekle / Sil
       const handleSaveExper = () => {
         if (!experForm.firm.trim() && !experForm.summary.trim()) {
           return showMessage("Lütfen ekspertiz firması veya özet not girin.", "error");
@@ -615,7 +663,6 @@
         });
       };
 
-      // Hesaplamalar
       const remainingOilKm = (Number(carInfo.nextOilKm) || 0) - (Number(carInfo.currentKm) || 0);
       const totalMaintenanceSpend = maintenances.reduce((acc, item) => acc + (Number(item.totalCost) || 0), 0);
       const totalNotesSpend = notesList.reduce((acc, item) => acc + (Number(item.cost) || 0), 0);
@@ -625,7 +672,6 @@
         return <div className="min-h-screen flex items-center justify-center text-emerald-300 text-lg font-medium">Yükleniyor...</div>;
       }
 
-      // GİRİŞ EKRANI (Bunko ile Birebir Aynı Zariflikte)
       if (!userId) {
         return (
           <div className="min-h-screen flex items-center justify-center p-4">
@@ -672,7 +718,6 @@
 
       return (
         <div className="min-h-screen py-6 sm:py-10 px-3 sm:px-6">
-          {/* Bildirim Balonu */}
           {message && (
             <div className={`fixed top-5 left-1/2 -translate-x-1/2 px-6 py-3.5 rounded-2xl shadow-2xl z-[100] text-sm font-semibold border ${
               message.type === 'success' ? 'bg-emerald-950/95 text-emerald-200 border-emerald-500/50' : 
@@ -683,7 +728,6 @@
             </div>
           )}
 
-          {/* Onay Penceresi (Ekleme / Çıkarma / Silme) */}
           {confirmation && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[90] p-4">
               <div className={`glass-panel p-7 rounded-3xl w-full max-w-md text-center border-t-4 ${confirmation.danger ? 'border-rose-500' : 'border-emerald-500'}`}>
@@ -701,10 +745,7 @@
             </div>
           )}
 
-          {/* ANA PANEL */}
           <div className="max-w-5xl mx-auto glass-panel p-5 sm:p-8 rounded-3xl relative">
-            
-            {/* Üst Başlık */}
             <div className="text-center border-b border-emerald-900/40 pb-6 mb-6">
               <AurisLogo size="w-16 h-16" />
               <h1 className="text-3xl sm:text-4xl font-extrabold font-montserrat elegant-title-gold tracking-tight">
@@ -715,7 +756,7 @@
               </p>
             </div>
 
-            {/* 1. BÖLÜM: BAŞTA ZARİF ÖZET BİLGİ KARTLARI */}
+            {/* ÖZET KARTLARI */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 mb-7">
               <div onClick={() => setActiveModal('ayarlar')} className="elegant-card p-4 cursor-pointer">
                 <span className="text-[11px] uppercase tracking-wider text-gray-400 font-semibold block mb-1">Güncel Kilometre</span>
@@ -753,7 +794,7 @@
               </div>
             </div>
 
-            {/* 2. BÖLÜM: TIKLAYINCA AÇILAN ZARİF MODÜL DÜĞMELERİ */}
+            {/* MODÜL DÜĞMELERİ */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-8 border-b border-emerald-900/40 pb-7">
               <button onClick={() => { resetMaintForm(); setActiveModal('bakim'); }} className="btn-black p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center border-emerald-700/50">
                 <span className="text-lg">🔧</span>
@@ -786,7 +827,7 @@
               </button>
             </div>
 
-            {/* 3. BÖLÜM: GEÇMİŞ BAKIMLAR VE SON NOTLAR LİSTESİ */}
+            {/* BAKIM LİSTESİ */}
             <div className="space-y-6">
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -794,6 +835,9 @@
                     <span>Bakım ve Değişen Parça Geçmişi</span>
                     <span className="text-xs bg-emerald-900/50 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-700/40">{maintenances.length}</span>
                   </h2>
+                  <button onClick={() => recoverPreviousData(db, userId)} className="text-xs text-amber-300 hover:underline">
+                    🔄 Eski Kayıtları Tara / Getir
+                  </button>
                 </div>
 
                 {maintenances.length > 0 ? (
@@ -840,12 +884,11 @@
                   </div>
                 ) : (
                   <div className="text-center py-10 bg-black/20 rounded-2xl border border-dashed border-emerald-900/40">
-                    <p className="text-gray-400 text-sm">Henüz bakım kaydı eklenmemiş. "+ Bakım & Parça" düğmesinden ekleyebilirsin.</p>
+                    <p className="text-gray-400 text-sm">Henüz bakım kaydı görünmüyor. "+ Bakım & Parça" düğmesinden ekleyebilir veya sağ üstteki "Eski Kayıtları Tara" düğmesine basabilirsin.</p>
                   </div>
                 )}
               </div>
 
-              {/* Özel Notlar Özeti (Varsa Ana Ekranda Zarifçe Gösterilir) */}
               {notesList.length > 0 && (
                 <div className="pt-4 border-t border-emerald-900/40">
                   <div className="flex justify-between items-center mb-3">
@@ -869,9 +912,7 @@
             </div>
           </div>
 
-          {/* ===================================================================== */}
-          {/* MODAL 1: BAKIM & HAZIR PARÇA ŞABLONU (Volan, Şanzıman Yağı, Manuel Tutar, Not) */}
-          {/* ===================================================================== */}
+          {/* BAKIM MODALI */}
           {activeModal === 'bakim' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto modal-scroll my-auto">
@@ -882,7 +923,6 @@
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
 
-                {/* Hızlı Şablon Butonları */}
                 <div className="mb-5">
                   <label className="block text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wider">Hazır Bakım Şablonu Seç (Tek Tıkla Doldur):</label>
                   <div className="flex flex-wrap gap-2">
@@ -904,7 +944,7 @@
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                   <div>
                     <label className="block text-xs text-gray-300 mb-1 font-medium">Bakım Başlığı</label>
-                    <input type="text" className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.title} onChange={(e) => setMaintForm({...maintForm, title: e.target.value})} placeholder="Ör: Periyodik Bakım" />
+                    <input type="text" className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.title} onChange={(e) => setMaintForm({...maintForm, title: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-300 mb-1 font-medium">Tarih</label>
@@ -912,11 +952,10 @@
                   </div>
                   <div>
                     <label className="block text-xs text-gray-300 mb-1 font-medium">Yapıldığı KM</label>
-                    <input type="number" className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.km} onChange={(e) => setMaintForm({...maintForm, km: e.target.value})} placeholder="115000" />
+                    <input type="number" className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.km} onChange={(e) => setMaintForm({...maintForm, km: e.target.value})} />
                   </div>
                 </div>
 
-                {/* Hazır Parça Listesi */}
                 <div className="mb-4">
                   <label className="block text-xs text-gray-300 mb-2 font-semibold">Değişen / İşlem Gören Parçalar (Tıkla Seç):</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto modal-scroll bg-black/40 p-3 rounded-2xl border border-emerald-900/40">
@@ -938,7 +977,6 @@
                   </div>
                 </div>
 
-                {/* Özel Parça Ekleme */}
                 <div className="flex gap-2 mb-5">
                   <input 
                     type="text" 
@@ -951,52 +989,32 @@
                   <button type="button" onClick={addCustomPartToForm} className="btn-black px-4 py-2.5 rounded-xl text-xs font-bold text-emerald-300">+ Parça Ekle</button>
                 </div>
 
-                {/* MANUEL TUTAR GİRİŞ ALANI */}
                 <div className="bg-black/35 p-4 rounded-2xl border border-amber-500/20 mb-4">
-                  <label className="block text-xs font-bold text-amber-300 mb-3">💶 Tutar Bilgileri (İstediğin Gibi Manuel Girebilirsin)</label>
+                  <label className="block text-xs font-bold text-amber-300 mb-3">💶 Tutar Bilgileri (Manuel Giriş)</label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">Parça Tutarı (₺) - İsteğe Bağlı</label>
-                      <input 
-                        type="number" 
-                        placeholder="Ör: 3500" 
-                        className="input-dark w-full p-2.5 rounded-xl text-sm" 
-                        value={maintForm.partsCost} 
-                        onChange={(e) => handlePartsOrLaborChange('partsCost', e.target.value)} 
-                      />
+                      <label className="block text-[11px] text-gray-400 mb-1">Parça Tutarı (₺)</label>
+                      <input type="number" placeholder="Ör: 3500" className="input-dark w-full p-2.5 rounded-xl text-sm" value={maintForm.partsCost} onChange={(e) => handlePartsOrLaborChange('partsCost', e.target.value)} />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-gray-400 mb-1">İşçilik Tutarı (₺) - İsteğe Bağlı</label>
-                      <input 
-                        type="number" 
-                        placeholder="Ör: 1500" 
-                        className="input-dark w-full p-2.5 rounded-xl text-sm" 
-                        value={maintForm.laborCost} 
-                        onChange={(e) => handlePartsOrLaborChange('laborCost', e.target.value)} 
-                      />
+                      <label className="block text-[11px] text-gray-400 mb-1">İşçilik Tutarı (₺)</label>
+                      <input type="number" placeholder="Ör: 1500" className="input-dark w-full p-2.5 rounded-xl text-sm" value={maintForm.laborCost} onChange={(e) => handlePartsOrLaborChange('laborCost', e.target.value)} />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-amber-300 font-bold mb-1">Toplam Tutar (₺) * (Manuel)</label>
-                      <input 
-                        type="number" 
-                        placeholder="Doğrudan toplam yaz..." 
-                        className="input-dark w-full p-2.5 rounded-xl text-sm font-bold border-amber-500/50 text-amber-200" 
-                        value={maintForm.totalCost} 
-                        onChange={(e) => setMaintForm({...maintForm, totalCost: e.target.value})} 
-                      />
+                      <label className="block text-[11px] text-amber-300 font-bold mb-1">Toplam Tutar (₺) *</label>
+                      <input type="number" placeholder="Doğrudan toplam yaz..." className="input-dark w-full p-2.5 rounded-xl text-sm font-bold border-amber-500/50 text-amber-200" value={maintForm.totalCost} onChange={(e) => setMaintForm({...maintForm, totalCost: e.target.value})} />
                     </div>
                   </div>
                 </div>
 
-                {/* Usta / Servis ve Not Alanı */}
                 <div className="space-y-3 mb-6">
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Servis / Usta Adı (İsteğe Bağlı)</label>
-                    <input type="text" placeholder="Ör: Özel Toyota Servisi - Ahmet Usta" className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.serviceName} onChange={(e) => setMaintForm({...maintForm, serviceName: e.target.value})} />
+                    <label className="block text-xs text-gray-300 mb-1">Servis / Usta Adı</label>
+                    <input type="text" placeholder="Ör: Özel Toyota Servisi" className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.serviceName} onChange={(e) => setMaintForm({...maintForm, serviceName: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Bakım Notun (Yağ markası, usta tavsiyesi, detaylar...)</label>
-                    <textarea rows="3" placeholder="Ör: Liqui Moly 5W-30 yağ kullanıldı, şanzıman yağı 75W LV ile değişti. Bir sonraki bakımda arka balatalar kontrol edilecek." className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.notes} onChange={(e) => setMaintForm({...maintForm, notes: e.target.value})}></textarea>
+                    <label className="block text-xs text-gray-300 mb-1">Bakım Notun</label>
+                    <textarea rows="3" placeholder="Kullanılan yağ markası, değişen parçaların markası veya usta notu..." className="input-dark w-full p-3 rounded-xl text-sm" value={maintForm.notes} onChange={(e) => setMaintForm({...maintForm, notes: e.target.value})}></textarea>
                   </div>
                 </div>
 
@@ -1007,9 +1025,7 @@
             </div>
           )}
 
-          {/* ===================================================================== */}
-          {/* MODAL 2: SERBEST ARAÇ NOT DEFTERİ (Manuel Tutar + Tarih + Not) */}
-          {/* ===================================================================== */}
+          {/* NOT DEFTERİ MODALI */}
           {activeModal === 'notlar' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-scroll my-auto">
@@ -1021,50 +1037,39 @@
                 <div className="bg-black/35 p-4 rounded-2xl border border-emerald-900/40 mb-6 space-y-3">
                   <h3 className="text-sm font-bold text-amber-300">{editingNoteId ? 'Notu Düzenle' : 'Yeni Not Ekle'}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input type="text" placeholder="Başlık (Ör: Kışlık Lastik, Ses, Aksesuar)" className="input-dark p-2.5 rounded-xl text-xs sm:col-span-1" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} />
+                    <input type="text" placeholder="Başlık (Ör: Kışlık Lastik, Ses)" className="input-dark p-2.5 rounded-xl text-xs" value={noteForm.title} onChange={(e) => setNoteForm({...noteForm, title: e.target.value})} />
                     <input type="date" className="input-dark p-2.5 rounded-xl text-xs" value={noteForm.date} onChange={(e) => setNoteForm({...noteForm, date: e.target.value})} />
                     <input type="number" placeholder="Varsa Tutar (₺) - Manuel" className="input-dark p-2.5 rounded-xl text-xs" value={noteForm.cost} onChange={(e) => setNoteForm({...noteForm, cost: e.target.value})} />
                   </div>
-                  <textarea rows="3" placeholder="Aracınla ilgili istediğin her türlü notu, parça kodunu, ses/izlenim bilgisini veya harcamayı buraya yazabilirsin..." className="input-dark w-full p-3 rounded-xl text-xs" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})}></textarea>
-                  <div className="flex gap-2">
-                    <button onClick={handleSaveNote} className="btn-black flex-1 py-2.5 rounded-xl text-xs font-bold text-emerald-300">
-                      {editingNoteId ? 'Notu Güncelle' : '+ Notu Kaydet'}
-                    </button>
-                    {editingNoteId && (
-                      <button onClick={() => { setEditingNoteId(null); setNoteForm({ date: getTodayDate(), title: "", km: "", cost: "", content: "" }); }} className="btn-black px-4 py-2.5 rounded-xl text-xs text-gray-400">
-                        Vazgeç
-                      </button>
-                    )}
-                  </div>
+                  <textarea rows="3" placeholder="Aracınla ilgili her türlü notu buraya yazabilirsin..." className="input-dark w-full p-3 rounded-xl text-xs" value={noteForm.content} onChange={(e) => setNoteForm({...noteForm, content: e.target.value})}></textarea>
+                  <button onClick={handleSaveNote} className="btn-black w-full py-2.5 rounded-xl text-xs font-bold text-emerald-300">
+                    {editingNoteId ? 'Notu Güncelle' : '+ Notu Kaydet'}
+                  </button>
                 </div>
 
                 <div className="space-y-3">
-                  {notesList.length > 0 ? notesList.map(n => (
-                    <div key={n.id} className="elegant-card p-4 flex flex-col sm:flex-row justify-between gap-3">
+                  {notesList.map(n => (
+                    <div key={n.id} className="elegant-card p-4 flex justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="font-bold text-white text-sm">{n.title}</h4>
                           <span className="text-[11px] text-gray-400">({formatDisplayDate(n.date)})</span>
                           {Number(n.cost) > 0 && <span className="text-xs font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded-lg">{formatCurrency(n.cost)}</span>}
                         </div>
-                        <p className="text-xs text-gray-200 whitespace-pre-line leading-relaxed">{n.content}</p>
+                        <p className="text-xs text-gray-200 whitespace-pre-line">{n.content}</p>
                       </div>
-                      <div className="flex sm:flex-col gap-1.5 self-end sm:self-center">
+                      <div className="flex gap-1.5 self-start">
                         <button onClick={() => { setEditingNoteId(n.id); setNoteForm({ date: n.date, title: n.title, km: n.km || "", cost: n.cost || "", content: n.content }); }} className="btn-black px-3 py-1.5 rounded-lg text-xs text-emerald-300">Düzenle</button>
                         <button onClick={() => handleDeleteNote(n.id)} className="btn-black px-3 py-1.5 rounded-lg text-xs text-rose-400">Sil</button>
                       </div>
                     </div>
-                  )) : (
-                    <p className="text-center text-gray-400 text-xs py-6">Henüz özel not eklenmemiş.</p>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ===================================================================== */}
-          {/* MODAL 3: BOYA & DEĞİŞEN KAPORTA DURUMU */}
-          {/* ===================================================================== */}
+          {/* KAPORTA MODALI */}
           {activeModal === 'kaporta' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-scroll my-auto">
@@ -1072,8 +1077,7 @@
                   <h2 className="text-xl sm:text-2xl font-bold elegant-title-gold">🚗 Boya & Değişen Durumu</h2>
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
-
-                <div className="space-y-2.5 mb-6">
+                <div className="space-y-2.5">
                   {BODY_PARTS.map(part => {
                     const currentStatus = carInfo.bodyParts?.[part.id] || "Orijinal";
                     return (
@@ -1084,15 +1088,12 @@
                             <button
                               key={st.value}
                               onClick={() => {
-                                const updated = {
-                                  ...carInfo,
-                                  bodyParts: { ...(carInfo.bodyParts || {}), [part.id]: st.value }
-                                };
+                                const updated = { ...carInfo, bodyParts: { ...(carInfo.bodyParts || {}), [part.id]: st.value } };
                                 setCarInfo(updated);
-                                saveCarInfoToCloud(updated, `${part.label}: ${st.value} olarak kaydedildi.`);
+                                saveCarInfoToCloud(updated, `${part.label}: ${st.value} kaydedildi.`);
                               }}
                               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all ${
-                                currentStatus === st.value ? st.color + ' scale-105 shadow' : 'bg-black/40 text-gray-400 border-white/5 hover:text-white'
+                                currentStatus === st.value ? st.color + ' scale-105' : 'bg-black/40 text-gray-400 border-white/5'
                               }`}
                             >
                               {st.value}
@@ -1107,135 +1108,73 @@
             </div>
           )}
 
-          {/* ===================================================================== */}
-          {/* MODAL 4: MUAYENE, SİGORTA & MTV VERGİ TAKİBİ (Manuel Tutarlı) */}
-          {/* ===================================================================== */}
+          {/* VERGİ MODALI */}
           {activeModal === 'vergi' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-lg my-auto">
                 <div className="flex justify-between items-center pb-4 mb-5 border-b border-emerald-900/50">
-                  <h2 className="text-xl sm:text-2xl font-bold elegant-title-gold">📅 Muayene, Sigorta & MTV</h2>
+                  <h2 className="text-xl font-bold elegant-title-gold">📅 Muayene, Sigorta & MTV</h2>
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
-
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-300 mb-1">Son TÜVTÜRK Muayene</label>
-                      <input 
-                        type="date" 
-                        className="input-dark w-full p-3 rounded-xl text-sm" 
-                        value={carInfo.lastInspection || ''} 
-                        onChange={(e) => {
-                          const d = e.target.value;
-                          let nextD = carInfo.nextInspection;
-                          if (d) {
-                            const parts = d.split('-');
-                            nextD = `${Number(parts[0]) + 2}-${parts[1]}-${parts[2]}`;
-                          }
-                          setCarInfo({...carInfo, lastInspection: d, nextInspection: nextD});
-                        }} 
-                      />
+                      <label className="block text-xs text-gray-300 mb-1">Son Muayene</label>
+                      <input type="date" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.lastInspection || ''} onChange={(e) => setCarInfo({...carInfo, lastInspection: e.target.value})} />
                     </div>
                     <div>
-                      <label className="block text-xs text-emerald-300 font-bold mb-1">Gelecek Muayene Tarihi</label>
-                      <input type="date" className="input-dark w-full p-3 rounded-xl text-sm border-emerald-600/50" value={carInfo.nextInspection || ''} onChange={(e) => setCarInfo({...carInfo, nextInspection: e.target.value})} />
+                      <label className="block text-xs text-emerald-300 font-bold mb-1">Gelecek Muayene</label>
+                      <input type="date" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.nextInspection || ''} onChange={(e) => setCarInfo({...carInfo, nextInspection: e.target.value})} />
                     </div>
                   </div>
-
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Trafik Sigortası Bitiş Tarihi</label>
+                    <label className="block text-xs text-gray-300 mb-1">Trafik Sigortası Bitiş</label>
                     <input type="date" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.insuranceEnd || ''} onChange={(e) => setCarInfo({...carInfo, insuranceEnd: e.target.value})} />
                   </div>
-
                   <div className="p-4 bg-black/35 rounded-2xl border border-emerald-900/40 space-y-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-amber-300">Motorlu Taşıtlar Vergisi (MTV)</h3>
-                    
                     <div className="flex items-center justify-between gap-3">
-                      <button 
-                        type="button"
-                        onClick={() => setCarInfo({...carInfo, mtv1Paid: !carInfo.mtv1Paid})}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex-1 text-left ${carInfo.mtv1Paid ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300' : 'bg-rose-950/60 border-rose-700 text-rose-300'}`}
-                      >
+                      <button type="button" onClick={() => setCarInfo({...carInfo, mtv1Paid: !carInfo.mtv1Paid})} className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex-1 text-left ${carInfo.mtv1Paid ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300' : 'bg-rose-950/60 border-rose-700 text-rose-300'}`}>
                         Ocak 1. Taksit: {carInfo.mtv1Paid ? 'ÖDENDİ ✓' : 'ÖDENMEDİ ✗'}
                       </button>
-                      <input 
-                        type="number" 
-                        placeholder="Tutar (₺)" 
-                        className="input-dark w-28 p-2 rounded-xl text-xs" 
-                        value={carInfo.mtv1Amount || ''} 
-                        onChange={(e) => setCarInfo({...carInfo, mtv1Amount: e.target.value})} 
-                      />
+                      <input type="number" placeholder="Tutar (₺)" className="input-dark w-28 p-2 rounded-xl text-xs" value={carInfo.mtv1Amount || ''} onChange={(e) => setCarInfo({...carInfo, mtv1Amount: e.target.value})} />
                     </div>
-
                     <div className="flex items-center justify-between gap-3">
-                      <button 
-                        type="button"
-                        onClick={() => setCarInfo({...carInfo, mtv2Paid: !carInfo.mtv2Paid})}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex-1 text-left ${carInfo.mtv2Paid ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300' : 'bg-rose-950/60 border-rose-700 text-rose-300'}`}
-                      >
+                      <button type="button" onClick={() => setCarInfo({...carInfo, mtv2Paid: !carInfo.mtv2Paid})} className={`px-3.5 py-2 rounded-xl text-xs font-bold border flex-1 text-left ${carInfo.mtv2Paid ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300' : 'bg-rose-950/60 border-rose-700 text-rose-300'}`}>
                         Temmuz 2. Taksit: {carInfo.mtv2Paid ? 'ÖDENDİ ✓' : 'ÖDENMEDİ ✗'}
                       </button>
-                      <input 
-                        type="number" 
-                        placeholder="Tutar (₺)" 
-                        className="input-dark w-28 p-2 rounded-xl text-xs" 
-                        value={carInfo.mtv2Amount || ''} 
-                        onChange={(e) => setCarInfo({...carInfo, mtv2Amount: e.target.value})} 
-                      />
+                      <input type="number" placeholder="Tutar (₺)" className="input-dark w-28 p-2 rounded-xl text-xs" value={carInfo.mtv2Amount || ''} onChange={(e) => setCarInfo({...carInfo, mtv2Amount: e.target.value})} />
                     </div>
                   </div>
-
-                  <button 
-                    onClick={() => {
-                      setConfirmation({
-                        message: "Muayene, sigorta ve vergi bilgilerini kaydetmek istiyor musunuz?",
-                        danger: false,
-                        onConfirm: () => { saveCarInfoToCloud(carInfo); setActiveModal(null); }
-                      });
-                    }} 
-                    className="btn-black w-full py-3.5 rounded-xl font-bold text-emerald-300"
-                  >
-                    Tarih ve Vergileri Kaydet
-                  </button>
+                  <button onClick={() => { saveCarInfoToCloud(carInfo); setActiveModal(null); }} className="btn-black w-full py-3.5 rounded-xl font-bold text-emerald-300">Kaydet</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ===================================================================== */}
-          {/* MODAL 5: EKSPERTİZ RAPORLARI */}
-          {/* ===================================================================== */}
+          {/* EKSPERTİZ MODALI */}
           {activeModal === 'exper' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-scroll my-auto">
                 <div className="flex justify-between items-center pb-4 mb-5 border-b border-emerald-900/50">
-                  <h2 className="text-xl sm:text-2xl font-bold elegant-title-gold">📋 Ekspertiz Raporları</h2>
+                  <h2 className="text-xl font-bold elegant-title-gold">📋 Ekspertiz Raporları</h2>
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
-
                 <div className="bg-black/35 p-4 rounded-2xl border border-emerald-900/40 mb-6 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input type="text" placeholder="Ekspertiz Firması" className="input-dark p-2.5 rounded-xl text-xs" value={experForm.firm} onChange={(e) => setExperForm({...experForm, firm: e.target.value})} />
                     <input type="date" className="input-dark p-2.5 rounded-xl text-xs" value={experForm.date} onChange={(e) => setExperForm({...experForm, date: e.target.value})} />
                     <input type="number" placeholder="Ücret Tutarı (₺)" className="input-dark p-2.5 rounded-xl text-xs" value={experForm.cost} onChange={(e) => setExperForm({...experForm, cost: e.target.value})} />
                   </div>
-                  <input type="text" placeholder="Google Drive / PDF Rapor Linki (Varsa yapıştırın)" className="input-dark w-full p-2.5 rounded-xl text-xs" value={experForm.linkUrl} onChange={(e) => setExperForm({...experForm, linkUrl: e.target.value})} />
-                  <textarea rows="2" placeholder="Rapor özeti, motor yüzdesi, mikron değerleri veya ekspertiz notu..." className="input-dark w-full p-2.5 rounded-xl text-xs" value={experForm.summary} onChange={(e) => setExperForm({...experForm, summary: e.target.value})}></textarea>
-                  <button onClick={handleSaveExper} className="btn-black w-full py-2.5 rounded-xl text-xs font-bold text-emerald-300">+ Ekspertiz Raporu Ekle</button>
+                  <input type="text" placeholder="Rapor Linki (Google Drive vb.)" className="input-dark w-full p-2.5 rounded-xl text-xs" value={experForm.linkUrl} onChange={(e) => setExperForm({...experForm, linkUrl: e.target.value})} />
+                  <textarea rows="2" placeholder="Rapor özeti ve notlar..." className="input-dark w-full p-2.5 rounded-xl text-xs" value={experForm.summary} onChange={(e) => setExperForm({...experForm, summary: e.target.value})}></textarea>
+                  <button onClick={handleSaveExper} className="btn-black w-full py-2.5 rounded-xl text-xs font-bold text-emerald-300">+ Raporu Kaydet</button>
                 </div>
-
                 <div className="space-y-3">
                   {experReports.map(rep => (
                     <div key={rep.id} className="elegant-card p-4 flex justify-between items-start gap-3">
                       <div>
-                        <h4 className="font-bold text-white text-sm">{rep.firm || 'Ekspertiz Raporu'} <span className="text-xs text-gray-400 font-normal">({formatDisplayDate(rep.date)})</span></h4>
+                        <h4 className="font-bold text-white text-sm">{rep.firm} ({formatDisplayDate(rep.date)})</h4>
                         <p className="text-xs text-gray-300 mt-1">{rep.summary}</p>
-                        {rep.linkUrl && (
-                          <a href={rep.linkUrl} target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs text-sky-400 hover:underline font-semibold">
-                            🔗 Rapor Dosyasını / Linkini Aç
-                          </a>
-                        )}
                       </div>
                       <button onClick={() => handleDeleteExper(rep.id)} className="btn-black px-3 py-1.5 rounded-lg text-xs text-rose-400">Sil</button>
                     </div>
@@ -1245,9 +1184,7 @@
             </div>
           )}
 
-          {/* ===================================================================== */}
-          {/* MODAL 6: KM GÜNCELLEME & ARAÇ AYARLARI */}
-          {/* ===================================================================== */}
+          {/* AYARLAR MODALI */}
           {activeModal === 'ayarlar' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-md my-auto">
@@ -1255,7 +1192,6 @@
                   <h2 className="text-xl font-bold elegant-title-gold">⚙️ KM & Araç Ayarları</h2>
                   <button onClick={() => setActiveModal(null)} className="btn-black w-9 h-9 rounded-full text-xl">&times;</button>
                 </div>
-
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs text-emerald-300 font-bold mb-1">Güncel Kilometre (KM)</label>
@@ -1266,33 +1202,11 @@
                     <input type="number" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.nextOilKm} onChange={(e) => setCarInfo({...carInfo, nextOilKm: Number(e.target.value)})} />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-300 mb-1">Araç Başlığı</label>
-                    <input type="text" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.carTitle} onChange={(e) => setCarInfo({...carInfo, carTitle: e.target.value})} />
+                    <label className="block text-xs text-gray-300 mb-1">Plaka</label>
+                    <input type="text" className="input-dark w-full p-3 rounded-xl text-sm uppercase" value={carInfo.plate} onChange={(e) => setCarInfo({...carInfo, plate: e.target.value.toUpperCase()})} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-300 mb-1">Plaka</label>
-                      <input type="text" className="input-dark w-full p-3 rounded-xl text-sm uppercase" value={carInfo.plate} onChange={(e) => setCarInfo({...carInfo, plate: e.target.value.toUpperCase()})} placeholder="34 ABC 123" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-300 mb-1">Renk</label>
-                      <input type="text" className="input-dark w-full p-3 rounded-xl text-sm" value={carInfo.color} onChange={(e) => setCarInfo({...carInfo, color: e.target.value})} />
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => {
-                      saveCarInfoToCloud(carInfo);
-                      setActiveModal(null);
-                    }} 
-                    className="btn-black w-full py-3.5 rounded-xl font-bold text-emerald-300 mt-2"
-                  >
-                    Ayarları Kaydet
-                  </button>
-
-                  <button onClick={handleSignOut} className="btn-black w-full py-3 rounded-xl font-semibold text-rose-400 border-rose-900/50 text-xs mt-4">
-                    Oturumu Kapat (Çıkış Yap)
-                  </button>
+                  <button onClick={() => { saveCarInfoToCloud(carInfo); setActiveModal(null); }} className="btn-black w-full py-3.5 rounded-xl font-bold text-emerald-300">Kaydet</button>
+                  <button onClick={handleSignOut} className="btn-black w-full py-3 rounded-xl font-semibold text-rose-400 border-rose-900/50 text-xs mt-4">Çıkış Yap</button>
                 </div>
               </div>
             </div>

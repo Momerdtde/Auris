@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auris Garaj</title>
   
-  <!-- Tarayıcı Sekme İkonu (Favicon - logo.jpeg varsa onu, yoksa Auris Garaj rozetini kullanır) -->
-  <link id="dynamic-favicon" rel="icon" type="image/jpeg" href="logo.jpeg" />
+  <!-- Tarayıcı Sekme İkonu (Otomatik dairesel kırpılmış logo ile güncellenir) -->
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="Gemini_Generated_Image_eea48leea48leea4.jpeg" />
   
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,7 +24,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <style>
-    /* ARACIN RENGİ: METALİK FÜME (KAHVERENGİ / ANTRASİT) ZARİF TEMA */
+    /* ARACIN RENGİ: METALİK FÜME (KAHVERENGİ / ANTRASİT) TEMA */
     body {
       font-family: 'Inter', sans-serif;
       background: radial-gradient(circle at top, #2c2523 0%, #171413 55%, #0e0c0b 100%);
@@ -38,18 +38,15 @@
       font-family: 'Montserrat', sans-serif;
     }
 
-    /* Metalik Platin / Gümüş Başlık Efekti (Sarı Kaldırıldı) */
     .elegant-title-fume {
       color: #ffffff;
       text-shadow: 0 2px 18px rgba(214, 211, 209, 0.25);
     }
 
-    /* Füme-Bronz Alt Başlık */
     .elegant-subtitle {
       color: #d6d3d1;
     }
 
-    /* Füme Cam Panel Efekti */
     .glass-panel {
       background: rgba(26, 22, 20, 0.88);
       backdrop-filter: blur(16px);
@@ -58,7 +55,6 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.78);
     }
 
-    /* Füme Kart Stili */
     .elegant-card {
       background: linear-gradient(145deg, rgba(44, 38, 35, 0.82), rgba(22, 19, 18, 0.94));
       border: 1px solid rgba(168, 162, 158, 0.14);
@@ -71,7 +67,6 @@
       transform: translateY(-2px);
     }
 
-    /* Tek Tip Zarif Füme Düğmeler (Sarı Sekme Kaldırıldı) */
     .btn-fume {
       background: linear-gradient(180deg, #2b2522 0%, #171412 100%);
       color: #f5f5f4;
@@ -90,7 +85,6 @@
       cursor: not-allowed;
     }
 
-    /* Girdi Kutuları */
     .input-dark {
       background-color: rgba(15, 13, 12, 0.9);
       border: 1px solid rgba(168, 162, 158, 0.25);
@@ -103,17 +97,31 @@
       outline: none;
     }
 
-    /* Logo Parlama Efekti */
-    .auris-logo-glow {
-      filter: drop-shadow(0 6px 18px rgba(14, 165, 233, 0.35));
-      transition: transform 0.3s ease, filter 0.3s ease;
+    /* LOGODAKİ BEYAZ KENARLIKLARI TAMAMEN YOK EDEN DAİRESEL MASK */
+    .logo-circle-crop {
+      border-radius: 9999px;
+      overflow: hidden;
+      background-color: #051329;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65), 0 0 18px rgba(34, 211, 238, 0.28);
+      border: 2px solid rgba(34, 211, 238, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .auris-logo-glow:hover {
+    .logo-circle-crop:hover {
       transform: scale(1.04);
-      filter: drop-shadow(0 8px 24px rgba(249, 115, 22, 0.45));
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.75), 0 0 24px rgba(249, 115, 22, 0.45);
+    }
+    .logo-circle-crop img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* Görselin etrafındaki beyaz boşluğu dışarı itip sadece yuvarlak rozeti bırakır */
+      transform: scale(1.095);
+      clip-path: circle(46.2% at 50% 50%);
     }
 
-    /* Kaydırma çubuğu */
     .modal-scroll::-webkit-scrollbar { width: 6px; }
     .modal-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
     .modal-scroll::-webkit-scrollbar-thumb { background: #443c38; border-radius: 10px; }
@@ -135,7 +143,7 @@
   </script>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
 
     const PREDEFINED_PARTS = [
       { name: "Motor Yağı (5W-30 / 0W-20)", category: "Periyodik" },
@@ -200,105 +208,91 @@
       { value: "Sök-Tak / Rötuş", color: "bg-stone-800 text-stone-300 border-stone-600" }
     ];
 
-    // GÖNDERDİĞİN "AURIS GARAJ" YUVARLAK ROZET LOGOSU BİLEŞENİ
-    function AurisBadgeLogo({ customLogo, onSelectLogoFile, size = "w-28 h-28 sm:w-32 sm:h-32" }) {
-      const candidateFiles = ["logo.jpeg", "logo.jpg", "logo.png", "icon.jpeg", "auris.jpeg"];
-      const [fileIndex, setFileIndex] = useState(0);
-      const [useSvgBadge, setUseSvgBadge] = useState(false);
-      const fileInputRef = useRef(null);
+    // GITHUB DEPONA YÜKLEDİĞİN GÖRSELİ OTOMATİK BULAN VE BEYAZLIKSIZ GÖSTEREN LOGO BİLEŞENİ
+    function AurisBadgeLogo({ size = "w-28 h-28 sm:w-32 sm:h-32" }) {
+      const defaultCandidates = [
+        "Gemini_Generated_Image_eea48leea48leea4.jpeg",
+        "Gemini_Generated_Image_eea48leea48leea4_2.jpeg",
+        "Gemini_Generated_Image_eea48leea48leea4.jpg",
+        "Gemini_Generated_Image_eea48leea48leea4.png",
+        "logo.jpeg",
+        "logo.jpg",
+        "logo.png",
+        "icon.jpeg",
+        "icon.png",
+        "auris.jpeg",
+        "auris.png"
+      ];
 
-      const handleImgError = () => {
-        if (fileIndex < candidateFiles.length - 1) {
-          setFileIndex(fileIndex + 1);
-        } else {
-          setUseSvgBadge(true);
+      const [candidates, setCandidates] = useState(defaultCandidates);
+      const [idx, setIdx] = useState(0);
+
+      // GitHub API üzerinden Momerdtde/Auris deposundaki resim dosyasının tam adını otomatik bulur
+      useEffect(() => {
+        fetch("https://api.github.com/repos/Momerdtde/Auris/contents/")
+          .then(res => res.ok ? res.json() : null)
+          .then(files => {
+            if (Array.isArray(files)) {
+              const imgFiles = files
+                .filter(f => f.name && /\.(jpe?g|png|webp)$/i.test(f.name))
+                .map(f => f.name);
+              if (imgFiles.length > 0) {
+                setCandidates([...imgFiles, ...defaultCandidates]);
+                setIdx(0);
+              }
+            }
+          })
+          .catch(() => {});
+      }, []);
+
+      const currentSrc = candidates[idx];
+
+      // Görsel yüklendiğinde tarayıcı sekme ikonunu (favicon) da beyazlıksız daire olarak günceller
+      const handleImageLoad = (e) => {
+        try {
+          const img = e.target;
+          const canvas = document.createElement('canvas');
+          canvas.width = 128;
+          canvas.height = 128;
+          const ctx = canvas.getContext('2d');
+          ctx.beginPath();
+          ctx.arc(64, 64, 62, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          // Beyaz kenarları dışarıda bırakmak için %8 yakınlaştırarak çizer
+          const cropMargin = img.naturalWidth * 0.042;
+          ctx.drawImage(
+            img,
+            cropMargin,
+            cropMargin,
+            img.naturalWidth - cropMargin * 2,
+            img.naturalHeight - cropMargin * 2,
+            0,
+            0,
+            128,
+            128
+          );
+          const fav = document.getElementById('dynamic-favicon');
+          if (fav) fav.href = canvas.toDataURL('image/png');
+        } catch (err) {}
+      };
+
+      const handleImageError = () => {
+        if (idx < candidates.length - 1) {
+          setIdx(idx + 1);
         }
       };
 
-      const activeImgSrc = customLogo || (!useSvgBadge ? candidateFiles[fileIndex] : null);
-
       return (
-        <div className="flex flex-col items-center justify-center mb-3">
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept="image/*" 
-            className="hidden" 
-            onChange={onSelectLogoFile} 
-          />
-          <div 
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            title="Logoyu değiştirmek veya görsel seçmek için tıklayın"
-            className="cursor-pointer group relative"
-          >
-            {activeImgSrc ? (
-              <img 
-                src={activeImgSrc} 
-                alt="Auris Garaj Logosu" 
-                className={`${size} rounded-full object-cover auris-logo-glow border-2 border-sky-400/50`}
-                onError={handleImgError}
-              />
-            ) : (
-              /* Gönderdiğin Yuvarlak "AURIS GARAJ" Anime/Vektör Logosu (Birebir Tasarım) */
-              <svg className={`${size} auris-logo-glow`} viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="bgNight" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#071936" />
-                    <stop offset="55%" stopColor="#0c2d59" />
-                    <stop offset="100%" stopColor="#06152d" />
-                  </linearGradient>
-                  <linearGradient id="carFume" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#d6d3d1" />
-                    <stop offset="50%" stopColor="#8a817c" />
-                    <stop offset="100%" stopColor="#494340" />
-                  </linearGradient>
-                  <path id="topArc" d="M 38,122 A 82,82 0 1,1 202,122" />
-                  <path id="bottomArc" d="M 206,126 A 86,86 0 0,1 34,126" />
-                </defs>
-
-                {/* Dış Lacivert ve Mavi Halkalar */}
-                <circle cx="120" cy="120" r="116" fill="#051329" stroke="#020b18" strokeWidth="4" />
-                <circle cx="120" cy="120" r="108" fill="url(#bgNight)" stroke="#22d3ee" strokeWidth="5" />
-                <circle cx="120" cy="120" r="82" fill="none" stroke="#f97316" strokeWidth="4" />
-
-                {/* Hız Çizgileri */}
-                <line x1="25" y1="115" x2="85" y2="115" stroke="#f97316" strokeWidth="3" strokeLinecap="round" />
-                <line x1="155" y1="100" x2="215" y2="100" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" />
-                <line x1="145" y1="158" x2="210" y2="142" stroke="#f97316" strokeWidth="3.5" strokeLinecap="round" />
-
-                {/* Füme 2016 Toyota Auris Hatchback Silüeti */}
-                <g transform="translate(0, 4)">
-                  {/* Gövde */}
-                  <path d="M 34,132 L 45,108 L 88,82 L 168,80 L 198,96 L 204,128 L 194,145 L 40,148 Z" fill="url(#carFume)" stroke="#0f172a" strokeWidth="3" strokeLinejoin="round" />
-                  {/* Camlar */}
-                  <path d="M 90,86 L 54,107 L 116,107 L 122,85 Z" fill="#38bdf8" fillOpacity="0.65" stroke="#0f172a" strokeWidth="2" />
-                  <path d="M 128,85 L 123,107 L 184,105 L 166,85 Z" fill="#1e3a5f" stroke="#0f172a" strokeWidth="2" />
-                  {/* Ön Izgara & Toyota Arması */}
-                  <path d="M 38,125 L 92,125 L 82,144 L 36,142 Z" fill="#0f172a" stroke="#d6d3d1" strokeWidth="1.5" />
-                  <ellipse cx="64" cy="118" rx="7" ry="5" fill="#0f172a" stroke="#ffffff" strokeWidth="1.8" />
-                  {/* Keen Look Farlar */}
-                  <polygon points="38,113 54,117 48,123 36,119" fill="#e0f2fe" />
-                  <polygon points="78,118 114,111 104,123 82,123" fill="#e0f2fe" stroke="#38bdf8" strokeWidth="1.5" />
-                  {/* Far Parlaması */}
-                  <circle cx="96" cy="117" r="6" fill="#ffffff" filter="blur(1px)" />
-                  {/* Jantlar */}
-                  <circle cx="136" cy="144" r="20" fill="#0f172a" stroke="#475569" strokeWidth="2" />
-                  <circle cx="136" cy="144" r="13" fill="none" stroke="#e2e8f0" strokeWidth="2.5" strokeDasharray="5 4" />
-                  <circle cx="192" cy="134" r="16" fill="#0f172a" stroke="#475569" strokeWidth="2" />
-                  <circle cx="192" cy="134" r="10" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 3" />
-                </g>
-
-                {/* Üst "AURIS" Yazısı */}
-                <text fontSize="38" fontWeight="900" fontFamily="Montserrat, sans-serif" letterSpacing="4" fill="#ffffff" stroke="#ea580c" strokeWidth="2.5">
-                  <textPath href="#topArc" startOffset="50%" textAnchor="middle">AURIS</textPath>
-                </text>
-
-                {/* Alt "GARAJ" Yazısı */}
-                <text fontSize="31" fontWeight="900" fontFamily="Montserrat, sans-serif" letterSpacing="3" fill="#ffffff" stroke="#ea580c" strokeWidth="2">
-                  <textPath href="#bottomArc" startOffset="50%" textAnchor="middle">GARAJ</textPath>
-                </text>
-              </svg>
-            )}
+        <div className="flex justify-center mb-3.5">
+          <div className={`${size} logo-circle-crop`}>
+            <img 
+              src={currentSrc} 
+              alt="Auris Garaj" 
+              crossOrigin="anonymous"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
           </div>
         </div>
       );
@@ -311,7 +305,6 @@
         getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot
       } = window.firebaseAPI;
 
-      // BUNKO İLE AYNI FIREBASE YAPILANDIRMASI (Mevcut kayıtların olduğu gibi korunur)
       const firebaseConfig = {
         apiKey: "AIzaSyCbXDdwnz0LNU7IXr4KO__usfkjYYaHJpo",
         authDomain: "okudugumkitaplarapp.firebaseapp.com",
@@ -347,7 +340,6 @@
         mtv1Amount: "",
         mtv2Paid: true,
         mtv2Amount: "",
-        customLogo: "",
         bodyParts: {}
       });
 
@@ -406,36 +398,6 @@
         return num.toLocaleString('tr-TR') + " ₺";
       };
 
-      // Özel Logo Seçildiğinde Küçültüp Buluta Kaydetme (Tüm Cihazlarda Görünür)
-      const handleSelectLogoFile = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const img = new Image();
-          img.onload = async () => {
-            const canvas = document.createElement('canvas');
-            const maxDim = 260;
-            const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-            const updated = { ...carInfo, customLogo: dataUrl };
-            setCarInfo(updated);
-            const fav = document.getElementById('dynamic-favicon');
-            if (fav) fav.href = dataUrl;
-            if (db && userId) {
-              await setDoc(doc(db, `artifacts/${appId}/users/${userId}/aurisGarage/carInfo`), { customLogo: dataUrl }, { merge: true });
-              showMessage("Auris Garaj logon kaydedildi!", "success");
-            }
-          };
-          img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-      };
-
       // MUAYENE & SİGORTA GERİ SAYIM HESAPLAYICI
       const getCountdownDetails = (targetDateStr) => {
         if (!targetDateStr) {
@@ -492,7 +454,6 @@
         };
       };
 
-      // GÜVENLİ DIŞA AKTARMA (.TXT ÖZET RAPOR VE .JSON TAM YEDEK)
       const exportGarageSummaryTxt = () => {
         const lines = [
           `=== ${carInfo.carTitle} (${carInfo.plate || 'Plakasız'}) ===`,
@@ -551,12 +512,7 @@
 
         const infoUnsub = onSnapshot(doc(db, `artifacts/${appId}/users/${userId}/aurisGarage/carInfo`), snap => {
           if (snap.exists()) {
-            const d = snap.data();
-            setCarInfo(prev => ({ ...prev, ...d }));
-            if (d.customLogo) {
-              const fav = document.getElementById('dynamic-favicon');
-              if (fav) fav.href = d.customLogo;
-            }
+            setCarInfo(prev => ({ ...prev, ...snap.data() }));
           }
         });
 
@@ -832,7 +788,7 @@
         return (
           <div className="min-h-screen flex items-center justify-center p-4">
             <div className="glass-panel p-8 sm:p-10 rounded-3xl w-full max-w-md text-center">
-              <AurisBadgeLogo customLogo={carInfo.customLogo} onSelectLogoFile={handleSelectLogoFile} size="w-28 h-28" />
+              <AurisBadgeLogo size="w-28 h-28" />
               <h1 className="text-3xl font-extrabold font-montserrat elegant-title-fume mb-1">Auris Garaj</h1>
               <p className="text-xs italic elegant-subtitle mb-6">2016 Toyota Auris 1.33 Life • Dijital Bakım & Not Defteri</p>
               
@@ -902,13 +858,9 @@
           )}
 
           <div className="max-w-5xl mx-auto glass-panel p-5 sm:p-8 rounded-3xl relative">
-            {/* Üst Başlık ve Yeni Auris Garaj Logosu */}
+            {/* Üst Başlık ve Beyazlıksız Yuvarlak Auris Garaj Logosu */}
             <div className="text-center border-b border-stone-700/50 pb-6 mb-6">
-              <AurisBadgeLogo 
-                customLogo={carInfo.customLogo} 
-                onSelectLogoFile={handleSelectLogoFile} 
-                size="w-28 h-28 sm:w-32 sm:h-32" 
-              />
+              <AurisBadgeLogo size="w-28 h-28 sm:w-32 sm:h-32" />
               <h1 className="text-3xl sm:text-4xl font-extrabold font-montserrat elegant-title-fume tracking-tight">
                 {carInfo.carTitle}
               </h1>
@@ -965,7 +917,7 @@
               </div>
             </div>
 
-            {/* MODÜL DÜĞMELERİ (SARI SEKME DÜZELTİLDİ, TÜMÜ UYUMLU FÜME TONDA) */}
+            {/* MODÜL DÜĞMELERİ (TÜMÜ UYUMLU FÜME TONDA) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-8 border-b border-stone-700/50 pb-7">
               <button onClick={() => { resetMaintForm(); setActiveModal('bakim'); }} className="btn-fume p-3.5 rounded-2xl flex flex-col items-center justify-center gap-1.5 text-center">
                 <span className="text-lg">🔧</span>
@@ -1381,7 +1333,7 @@
             </div>
           )}
 
-          {/* AYARLAR & LOGO YÜKLEME MODALI */}
+          {/* AYARLAR MODALI */}
           {activeModal === 'ayarlar' && (
             <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto" onClick={(e) => e.target === e.currentTarget && setActiveModal(null)}>
               <div className="glass-panel p-5 sm:p-8 rounded-3xl w-full max-w-md my-auto">
